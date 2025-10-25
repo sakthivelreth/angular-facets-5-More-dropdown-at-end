@@ -1,0 +1,30 @@
+<div class="facet-container">
+  <input
+    type="text"
+    placeholder="Search or select column..."
+    (focus)="onFocus()"
+    class="facet-input"
+  />
+
+  <!-- Show column list when focused -->
+  <ul *ngIf="showColumns()" class="dropdown">
+    <li *ngFor="let col of columns" (click)="onColumnSelect(col)">
+      {{ col }}
+    </li>
+  </ul>
+
+  <!-- Show value options once a column is selected -->
+  <ul *ngIf="selectedColumn() && possibleValues().length" class="dropdown">
+    <li *ngFor="let value of possibleValues()" (click)="onValueSelect(value)">
+      {{ selectedColumn() }}: {{ value }}
+    </li>
+  </ul>
+
+  <!-- Chips -->
+  <div class="chips">
+    <span class="chip" *ngFor="let f of filters()">
+      {{ f.column }}: {{ f.value }}
+      <button (click)="removeFilter(f)">×</button>
+    </span>
+  </div>
+</div>

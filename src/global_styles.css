@@ -1,0 +1,10 @@
+/* Add application styles & imports to this file! */
+.highlight {
+  background-color: yellow;
+  font-weight: bold;
+}
+
+.facet-input::placeholder {
+  color: #999; /* gray */
+  opacity: 1; /* ensure visible */
+}
