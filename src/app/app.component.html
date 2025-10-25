@@ -8,9 +8,7 @@
           <input
             type="text"
             class="facet-input inline"
-            [placeholder]="
-              col.type === 'select' ? 'Select value' : 'Enter value'
-            "
+            [placeholder]="col.type === 'select' ? 'Select value' : 'Enter value'"
             [value]="inputValue()"
             (input)="onSearchInput($any($event.target).value)"
             (keydown.enter)="selectValueOnEnter()"
@@ -43,12 +41,7 @@
     <!-- Value dropdown (only for select columns) -->
     <ul
       class="dropdown value-dropdown"
-      *ngIf="
-        showDropdown() &&
-        selectedColumn() &&
-        selectedColumn()?.type === 'select' &&
-        possibleValues().length
-      "
+      *ngIf="showDropdown() && selectedColumn() && selectedColumn()?.type === 'select' && possibleValues().length"
     >
       <li *ngFor="let val of possibleValues()" (click)="selectValue(val)">
         <span [innerHTML]="highlightMatch(val)"></span>
@@ -60,17 +53,13 @@
       <span
         *ngIf="hasFilters"
         class="clear-all"
-        (click)="
-          activeFilters.set({}); resetInput(); moreDropdownOpen.set(false)
-        "
+        (click)="activeFilters.set({}); resetInput(); moreDropdownOpen.set(false)"
       >
         <a href="#">Clear All</a>
       </span>
 
       <!-- First two chips always visible -->
-      <ng-container
-        *ngFor="let col of activeFilters() | keyvalue; let i = index"
-      >
+      <ng-container *ngFor="let col of activeFilters() | keyvalue; let i = index">
         <ng-container *ngIf="i < 2">
           <span class="chip">
             {{ getColumnLabel(col.key) }}: {{ col.value }}
@@ -83,13 +72,11 @@
       <ng-container *ngIf="hasMoreThanTwoFilters">
         <span class="more-wrapper">
           <!-- Clickable More link -->
-          <span class="more-text" (click)="toggleMoreDropdown()"> + More </span>
+          <span class="more-text" (click)="toggleMoreDropdown()">+ More</span>
 
           <!-- More dropdown -->
           <ul *ngIf="moreDropdownOpen()" class="more-dropdown">
-            <ng-container
-              *ngFor="let col of activeFilters() | keyvalue; let i = index"
-            >
+            <ng-container *ngFor="let col of activeFilters() | keyvalue; let i = index">
               <li *ngIf="i >= 2">
                 <span class="chip">
                   {{ getColumnLabel(col.key) }}: {{ col.value }}
@@ -111,7 +98,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let row of filteredData()">
-          <td *ngFor="let col of columns">{{ row[col.key] }}</td>
+          <td *ngFor="let col of columns">{{ $any(row)[col.key] || '' }}</td>
         </tr>
       </tbody>
     </table>
