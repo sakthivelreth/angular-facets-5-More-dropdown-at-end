@@ -38,6 +38,8 @@ export class AppComponent {
     { enclosure: 'BP_TNK_1', status: 'Active', description: 'Tank 1' },
   ]);
 
+  readonly visibleChipCount = 2;
+
   // Signals
   activeFilters = signal<Record<string, string>>({});
   selectedColumn = signal<Column | null>(null);
@@ -71,9 +73,7 @@ export class AppComponent {
   filteredColumns = computed(() => {
     const activeKeys = Object.keys(this.activeFilters());
     const q = this.inputValue().toLowerCase();
-    return this.columns.filter(
-      (c) => !activeKeys.includes(c.key) && c.label.toLowerCase().includes(q)
-    );
+    return this.columns.filter((c) => !activeKeys.includes(c.key) && c.label.toLowerCase().includes(q));
   });
 
   // --- Dynamic possible values based on current filtered table ---
@@ -182,4 +182,15 @@ export class AppComponent {
       idx + query.length
     )}</span>${text.substring(idx + query.length)}`;
   }
+
+  // Split chips into "visible" (last N) and "more" (others)
+  lastVisibleChips = computed(() => {
+    const entries = Object.entries(this.activeFilters());
+    return entries.slice(-this.visibleChipCount).map(([key, value]) => ({ key, value }));
+  });
+
+  moreChips = computed(() => {
+    const entries = Object.entries(this.activeFilters());
+    return entries.slice(0, -this.visibleChipCount).map(([key, value]) => ({ key, value }));
+  });
 }

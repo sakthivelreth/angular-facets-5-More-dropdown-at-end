@@ -48,6 +48,7 @@
       </li>
     </ul>
 
+    <!-- Chips -->
     <div class="chips">
       <!-- Clear All -->
       <span
@@ -58,32 +59,26 @@
         <a href="#">Clear All</a>
       </span>
 
-      <!-- First two chips always visible -->
-      <ng-container *ngFor="let col of activeFilters() | keyvalue; let i = index">
-        <ng-container *ngIf="i < 2">
-          <span class="chip">
-            {{ getColumnLabel(col.key) }}: {{ col.value }}
-            <button (click)="removeChip(col.key)">×</button>
-          </span>
-        </ng-container>
+      <!-- Last N visible chips -->
+      <ng-container *ngFor="let col of lastVisibleChips(); let i = index">
+        <span class="chip">
+          {{ getColumnLabel(col.key) }}: {{ col.value }}
+          <button (click)="removeChip(col.key)">×</button>
+        </span>
       </ng-container>
 
       <!-- More link -->
-      <ng-container *ngIf="hasMoreThanTwoFilters">
+      <ng-container *ngIf="moreChips().length > 0">
         <span class="more-wrapper">
-          <!-- Clickable More link -->
           <span class="more-text" (click)="toggleMoreDropdown()">+ More</span>
 
-          <!-- More dropdown -->
           <ul *ngIf="moreDropdownOpen()" class="more-dropdown">
-            <ng-container *ngFor="let col of activeFilters() | keyvalue; let i = index">
-              <li *ngIf="i >= 2">
-                <span class="chip">
-                  {{ getColumnLabel(col.key) }}: {{ col.value }}
-                  <button (click)="removeChip(col.key)">×</button>
-                </span>
-              </li>
-            </ng-container>
+            <li *ngFor="let col of moreChips()">
+              <span class="chip">
+                {{ getColumnLabel(col.key) }}: {{ col.value }}
+                <button (click)="removeChip(col.key)">×</button>
+              </span>
+            </li>
           </ul>
         </span>
       </ng-container>
