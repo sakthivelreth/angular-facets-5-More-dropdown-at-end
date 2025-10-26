@@ -9,6 +9,7 @@ import {
   OnDestroy,
   ElementRef,
   ViewChild,
+  Signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -33,7 +34,10 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   private removeTokenContainer = false;
 
-  @Input() columns: Column[] = [];
+  //@Input() columns: Column[] = [];
+
+  @Input() columns?: Signal<Column[]>;
+
   @Input() visibleChipCount = 2;
   @Input() dynamicValuesProvider?: (colKey: string, searchTerm: string) => string[] | Promise<string[]>;
 
@@ -66,7 +70,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   filteredColumns = computed(() => {
     const q = this.inputValue().toLowerCase();
     const activeKeys = Object.keys(this.activeFilters());
-    return this.columns.filter((c) => !activeKeys.includes(c.key) && c.label.toLowerCase().includes(q));
+    return this.columns?.().filter((c) => !activeKeys.includes(c.key) && c.label.toLowerCase().includes(q));
   });
 
   possibleValues = computed(() => {
@@ -124,15 +128,17 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   }
 
   selectColumnOnEnter() {
-    const match = this.filteredColumns()[0];
-    if (match) this.selectColumn(match);
+    const match = (this.filteredColumns() ?? [])[0];
+    if (!match) return;
+    this.selectColumn(match);
   }
 
   onColumnKeydown(event: KeyboardEvent) {
     const list = this.filteredColumns();
-    const lastIndex = list.length - 1;
+    const safeList = list ?? [];
+    if (!safeList.length) return;
 
-    if (!list.length) return;
+    const lastIndex = safeList.length - 1;
 
     switch (event.key) {
       case 'ArrowDown':
@@ -147,7 +153,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
       case 'Enter':
         event.preventDefault();
-        const selected = list[this.highlightedIndex()];
+        const selected = safeList[this.highlightedIndex()];
         if (selected) this.selectColumn(selected);
         else this.selectColumnOnEnter(); // fallback to first
         break;
@@ -240,7 +246,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   }
 
   getColumnLabel(key: string) {
-    return this.columns.find((c) => c.key === key)?.label || key;
+    return this.columns?.().find((c) => c.key === key)?.label || key;
   }
 
   highlightMatch(text: string): string {

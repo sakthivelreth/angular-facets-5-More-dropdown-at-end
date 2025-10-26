@@ -8,12 +8,12 @@
 <table>
   <thead>
     <tr>
-      <th *ngFor="let col of columns">{{ col.label }}</th>
+      <th *ngFor="let col of columns()">{{ col.label }}</th>
     </tr>
   </thead>
   <tbody>
     <tr *ngFor="let row of filteredData()">
-      <td *ngFor="let col of columns">{{ $any(row)[col.key] || '' }}</td>
+      <td *ngFor="let col of columns()">{{ $any(row)[col.key] || '' }}</td>
     </tr>
   </tbody>
 </table>
