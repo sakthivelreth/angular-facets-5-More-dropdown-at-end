@@ -15,6 +15,7 @@
               (input)="onSearchInput($any($event.target).value)"
               (keydown.enter)="selectValueOnEnter()"
               (keydown.backspace)="$event.stopPropagation()"
+              autofocus
             />
 
             <ul
@@ -32,6 +33,7 @@
       <!-- Placeholder input when no column selected -->
       <ng-container *ngIf="!selectedColumn()">
         <input
+          #searchInput
           type="text"
           class="facet-input"
           [placeholder]="'Add filter...'"
@@ -39,6 +41,7 @@
           (focus)="onFocus()"
           (input)="onSearchInput($any($event.target).value)"
           (keydown.enter)="selectColumnOnEnter()"
+          autofocus
         />
       </ng-container>
     </div>

@@ -29,6 +29,7 @@ export interface Column {
   styleUrls: ['./faceted-search.component.css'],
 })
 export class FacetFilterComponent implements OnInit, OnDestroy, AfterViewChecked {
+  @ViewChild('searchInput', { read: ElementRef }) searchInputRef?: ElementRef<HTMLInputElement>;
   @ViewChild('valueInput', { read: ElementRef }) valueInputRef?: ElementRef<HTMLInputElement>;
 
   // Signal to track left offset of the dropdown
@@ -153,6 +154,9 @@ export class FacetFilterComponent implements OnInit, OnDestroy, AfterViewChecked
     this.filtersChange.emit(this.activeFilters());
 
     this.resetInput();
+
+    // Focus the input again
+    setTimeout(() => this.searchInputRef?.nativeElement.focus());
   }
 
   selectValueOnEnter() {
