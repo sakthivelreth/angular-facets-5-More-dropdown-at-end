@@ -102,6 +102,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  align-items: center;
 }
 
 .chip {
@@ -124,7 +125,6 @@
 
 .clear-all {
   margin-right: 8px;
-  font-size: 14px;
 }
 
 .clear-all a {
@@ -141,7 +141,6 @@
 .more-text {
   cursor: pointer;
   color: #007bff;
-  font-weight: bold;
   max-width: 80%;
   white-space: nowrap;
   overflow: hidden;
