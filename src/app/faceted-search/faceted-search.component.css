@@ -115,7 +115,7 @@
   text-overflow: ellipsis;
 }
 
-.chip button {
+.chip button, .token button {
   background: transparent;
   border: none;
   cursor: pointer;

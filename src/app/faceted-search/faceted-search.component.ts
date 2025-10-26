@@ -127,6 +127,10 @@ export class FacetFilterComponent implements OnInit, OnDestroy, AfterViewChecked
     this.showDropdown.set(true);
   }
 
+  removeColumn(col: Column) {
+    this.resetInput();
+  }
+
   selectColumn(col: Column) {
     this.selectedColumn.set(col);
     this.inputValue.set('');
