@@ -15,7 +15,6 @@
               (input)="onSearchInput($any($event.target).value)"
               (keydown.enter)="selectValueOnEnter()"
               (keydown.backspace)="$event.stopPropagation()"
-              autofocus
             />
 
             <ul
@@ -27,7 +26,7 @@
               </li>
             </ul>
           </span>
-          <button (click)="removeColumn(col)">×</button>
+          <button (click)="removeColumn()">×</button>
         </span>
       </ng-container>
 
@@ -42,7 +41,6 @@
           (focus)="onFocus()"
           (input)="onSearchInput($any($event.target).value)"
           (keydown.enter)="selectColumnOnEnter()"
-          autofocus
         />
       </ng-container>
     </div>
@@ -53,17 +51,6 @@
         <span [innerHTML]="highlightMatch(col.label)"></span>
       </li>
     </ul>
-
-    <!-- Value dropdown -->
-    <!--     <ul
-      class="dropdown value-dropdown"
-      *ngIf="showDropdown() && selectedColumn() && possibleValues().length"
-      [style.left.px]="dropdownOffset()"
-    >
-      <li *ngFor="let val of possibleValues()" (click)="selectValue(val)">
-        <span [innerHTML]="highlightMatch(val)"></span>
-      </li>
-    </ul> -->
 
     <!-- Chips -->
     <div class="chips">

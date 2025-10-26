@@ -9,7 +9,6 @@ import {
   OnDestroy,
   ElementRef,
   ViewChild,
-  AfterViewChecked,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -28,22 +27,11 @@ export interface Column {
   templateUrl: './faceted-search.component.html',
   styleUrls: ['./faceted-search.component.css'],
 })
-export class FacetFilterComponent implements OnInit, OnDestroy, AfterViewChecked {
+export class FacetFilterComponent implements OnInit, OnDestroy {
   @ViewChild('searchInput', { read: ElementRef }) searchInputRef?: ElementRef<HTMLInputElement>;
   @ViewChild('valueInput', { read: ElementRef }) valueInputRef?: ElementRef<HTMLInputElement>;
 
-  // Signal to track left offset of the dropdown
-  dropdownOffset = signal(0);
-  private listenerAttached = false;
-
-  ngAfterViewChecked() {
-    const input = this.valueInputRef?.nativeElement;
-    if (input && !this.listenerAttached) {
-      input.addEventListener('input', () => this.updateDropdownPosition());
-      input.addEventListener('click', () => this.updateDropdownPosition());
-      this.listenerAttached = true;
-    }
-  }
+  private removeTokenContainer = false;
 
   @Input() columns: Column[] = [];
   @Input() visibleChipCount = 2;
@@ -61,10 +49,12 @@ export class FacetFilterComponent implements OnInit, OnDestroy, AfterViewChecked
 
   // Computed
   hasFilters = computed(() => Object.keys(this.activeFilters()).length > 0);
+
   lastVisibleChips = computed(() => {
     const entries = Object.entries(this.activeFilters());
     return entries.slice(-this.visibleChipCount).map(([key, value]) => ({ key, value }));
   });
+
   moreChips = computed(() => {
     const entries = Object.entries(this.activeFilters());
     return entries.slice(0, -this.visibleChipCount).map(([key, value]) => ({ key, value }));
@@ -97,29 +87,13 @@ export class FacetFilterComponent implements OnInit, OnDestroy, AfterViewChecked
     return [];
   });
 
-  updateDropdownPosition() {
-    const input = this.valueInputRef?.nativeElement;
-    if (!input) return;
-
-    const selectionStart = input.selectionStart || 0;
-
-    const span = document.createElement('span');
-    span.style.visibility = 'hidden';
-    span.style.position = 'absolute';
-    span.style.whiteSpace = 'pre';
-    span.style.font = getComputedStyle(input).font;
-    span.textContent = input.value.slice(0, selectionStart);
-
-    document.body.appendChild(span);
-    const offset = span.getBoundingClientRect().width;
-    document.body.removeChild(span);
-
-    this.dropdownOffset.set(offset);
-  }
-
   // --- Handlers ---
   onFocus() {
-    this.showDropdown.set(true);
+    if (!this.removeTokenContainer) {
+      this.showDropdown.set(true);
+    } else {
+      this.removeTokenContainer = false;
+    }
   }
 
   onSearchInput(val: string) {
@@ -127,7 +101,8 @@ export class FacetFilterComponent implements OnInit, OnDestroy, AfterViewChecked
     this.showDropdown.set(true);
   }
 
-  removeColumn(col: Column) {
+  removeColumn() {
+    this.removeTokenContainer = true;
     this.resetInput();
   }
 
@@ -180,6 +155,11 @@ export class FacetFilterComponent implements OnInit, OnDestroy, AfterViewChecked
       const { [key]: _, ...rest } = f;
       //Emit updated filters to parent
       this.filtersChange.emit(rest);
+
+      // Hide dropdown when a chip is removed
+      this.showDropdown.set(false);
+      this.moreDropdownOpen.set(false);
+
       return rest;
     });
   }
