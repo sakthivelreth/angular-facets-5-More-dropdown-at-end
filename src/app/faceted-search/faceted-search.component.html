@@ -1,30 +1,81 @@
 <div class="facet-container">
-  <input
-    type="text"
-    placeholder="Search or select column..."
-    (focus)="onFocus()"
-    class="facet-input"
-  />
+  <div class="search-box">
+    <div class="input-wrapper" (click)="onFocus()">
+      <!-- Selected column token + input -->
+      <ng-container *ngIf="selectedColumn() as col">
+        <span class="token">
+          {{ col.label }}:
+          <input
+            #valueInput
+            type="text"
+            class="facet-input inline"
+            [placeholder]="col.type === 'select' ? 'Select value' : 'Enter value'"
+            [value]="inputValue()"
+            (input)="onSearchInput($any($event.target).value)"
+            (keydown.enter)="selectValueOnEnter()"
+            (keydown.backspace)="$event.stopPropagation()"
+          />
+        </span>
+      </ng-container>
 
-  <!-- Show column list when focused -->
-  <ul *ngIf="showColumns()" class="dropdown">
-    <li *ngFor="let col of columns" (click)="onColumnSelect(col)">
-      {{ col }}
-    </li>
-  </ul>
+      <!-- Placeholder input when no column selected -->
+      <ng-container *ngIf="!selectedColumn()">
+        <input
+          type="text"
+          class="facet-input"
+          [placeholder]="'Add filter...'"
+          [value]="inputValue()"
+          (focus)="onFocus()"
+          (input)="onSearchInput($any($event.target).value)"
+          (keydown.enter)="selectColumnOnEnter()"
+        />
+      </ng-container>
+    </div>
 
-  <!-- Show value options once a column is selected -->
-  <ul *ngIf="selectedColumn() && possibleValues().length" class="dropdown">
-    <li *ngFor="let value of possibleValues()" (click)="onValueSelect(value)">
-      {{ selectedColumn() }}: {{ value }}
-    </li>
-  </ul>
+    <!-- Column dropdown -->
+    <ul class="dropdown" *ngIf="showDropdown() && !selectedColumn()">
+      <li *ngFor="let col of filteredColumns()" (click)="selectColumn(col)">
+        <span [innerHTML]="highlightMatch(col.label)"></span>
+      </li>
+    </ul>
 
-  <!-- Chips -->
-  <div class="chips">
-    <span class="chip" *ngFor="let f of filters()">
-      {{ f.column }}: {{ f.value }}
-      <button (click)="removeFilter(f)">×</button>
-    </span>
+    <!-- Value dropdown -->
+    <ul
+      class="dropdown value-dropdown"
+      *ngIf="showDropdown() && selectedColumn() && possibleValues().length"
+      [style.left.px]="dropdownOffset()"
+    >
+      <li *ngFor="let val of possibleValues()" (click)="selectValue(val)">
+        <span [innerHTML]="highlightMatch(val)"></span>
+      </li>
+    </ul>
+
+    <!-- Chips -->
+    <div class="chips">
+      <span *ngIf="hasFilters()" class="clear-all" (click)="clearAll()">
+        <a href="#">Clear All</a>
+      </span>
+
+      <ng-container *ngFor="let col of lastVisibleChips()">
+        <span class="chip">
+          {{ getColumnLabel(col.key) }}: {{ col.value }}
+          <button (click)="removeChip(col.key)">×</button>
+        </span>
+      </ng-container>
+
+      <ng-container *ngIf="moreChips().length > 0">
+        <span class="more-wrapper">
+          <span class="more-text" (click)="toggleMoreDropdown()">+ More</span>
+          <ul *ngIf="moreDropdownOpen()" class="more-dropdown">
+            <li *ngFor="let col of moreChips()">
+              <span class="chip">
+                {{ getColumnLabel(col.key) }}: {{ col.value }}
+                <button (click)="removeChip(col.key)">×</button>
+              </span>
+            </li>
+          </ul>
+        </span>
+      </ng-container>
+    </div>
   </div>
 </div>

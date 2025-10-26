@@ -1,78 +1,227 @@
 import {
   Component,
-  EventEmitter,
   Input,
   Output,
+  EventEmitter,
   signal,
   computed,
+  OnInit,
+  OnDestroy,
+  ElementRef,
+  ViewChild,
+  AfterViewChecked,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
-export interface FacetFilter {
-  column: string;
-  value: string;
+export interface Column {
+  key: string;
+  label: string;
+  type: 'text' | 'select';
+  values?: string[];
 }
 
 @Component({
-  selector: 'app-faceted-search',
+  selector: 'mgui-facet-filter',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './faceted-search.component.html',
   styleUrls: ['./faceted-search.component.css'],
 })
-export class FacetedSearchComponent {
-  @Input() columns: string[] = [];
-  @Input() rows: Record<string, any>[] = [];
-  @Input() activeFilters: FacetFilter[] = [];
+export class FacetFilterComponent implements OnInit, OnDestroy, AfterViewChecked {
+  @ViewChild('valueInput', { read: ElementRef }) valueInputRef?: ElementRef<HTMLInputElement>;
 
-  @Output() filtersChange = new EventEmitter<FacetFilter[]>();
+  // Signal to track left offset of the dropdown
+  dropdownOffset = signal(0);
+  private listenerAttached = false;
 
-  searchFocused = signal(false);
-  selectedColumn = signal<string | null>(null);
-  possibleValues = signal<string[]>([]);
-  filters = signal<FacetFilter[]>([]);
-
-  ngOnInit() {
-    this.filters.set(this.activeFilters);
+  ngAfterViewChecked() {
+    const input = this.valueInputRef?.nativeElement;
+    if (input && !this.listenerAttached) {
+      input.addEventListener('input', () => this.updateDropdownPosition());
+      input.addEventListener('click', () => this.updateDropdownPosition());
+      this.listenerAttached = true;
+    }
   }
 
+  @Input() columns: Column[] = [];
+  @Input() visibleChipCount = 2;
+  @Input() dynamicValuesProvider?: (colKey: string, searchTerm: string) => string[] | Promise<string[]>;
+
+  @Output() filtersChange = new EventEmitter<Record<string, string>>();
+
+  // Signals
+  activeFilters = signal<Record<string, string>>({});
+  selectedColumn = signal<Column | null>(null);
+  inputValue = signal('');
+  showDropdown = signal(false);
+  moreDropdownOpen = signal(false);
+  filteredValues = signal<string[]>([]);
+
+  // Computed
+  hasFilters = computed(() => Object.keys(this.activeFilters()).length > 0);
+  lastVisibleChips = computed(() => {
+    const entries = Object.entries(this.activeFilters());
+    return entries.slice(-this.visibleChipCount).map(([key, value]) => ({ key, value }));
+  });
+  moreChips = computed(() => {
+    const entries = Object.entries(this.activeFilters());
+    return entries.slice(0, -this.visibleChipCount).map(([key, value]) => ({ key, value }));
+  });
+
+  filteredColumns = computed(() => {
+    const q = this.inputValue().toLowerCase();
+    const activeKeys = Object.keys(this.activeFilters());
+    return this.columns.filter((c) => !activeKeys.includes(c.key) && c.label.toLowerCase().includes(q));
+  });
+
+  possibleValues = computed(() => {
+    const col = this.selectedColumn();
+    if (!col || col.type !== 'select') return []; //only select columns
+
+    //if (!col) return []; //All the columns values will be auto populated
+
+    // If dynamicValuesProvider is provided, use it
+    if (this.dynamicValuesProvider) {
+      const result = this.dynamicValuesProvider(col.key, this.inputValue());
+      return Array.isArray(result) ? result : [];
+    }
+
+    // fallback to static values for select columns
+    if (col.type === 'select' && col.values) {
+      const q = this.inputValue().toLowerCase();
+      return col.values.filter((v) => v.toLowerCase().includes(q));
+    }
+
+    return [];
+  });
+
+  updateDropdownPosition() {
+    const input = this.valueInputRef?.nativeElement;
+    if (!input) return;
+
+    const selectionStart = input.selectionStart || 0;
+
+    const span = document.createElement('span');
+    span.style.visibility = 'hidden';
+    span.style.position = 'absolute';
+    span.style.whiteSpace = 'pre';
+    span.style.font = getComputedStyle(input).font;
+    span.textContent = input.value.slice(0, selectionStart);
+
+    document.body.appendChild(span);
+    const offset = span.getBoundingClientRect().width;
+    document.body.removeChild(span);
+
+    this.dropdownOffset.set(offset);
+  }
+
+  // --- Handlers ---
   onFocus() {
-    this.searchFocused.set(true);
+    this.showDropdown.set(true);
   }
 
-  onColumnSelect(column: string) {
-    this.selectedColumn.set(column);
-    this.searchFocused.set(false);
-
-    const uniqueValues = Array.from(new Set(this.rows.map((r) => r[column])));
-    this.possibleValues.set(uniqueValues);
+  onSearchInput(val: string) {
+    this.inputValue.set(val);
+    this.showDropdown.set(true);
   }
 
-  onValueSelect(value: string) {
+  selectColumn(col: Column) {
+    this.selectedColumn.set(col);
+    this.inputValue.set('');
+    this.showDropdown.set(col.type === 'select');
+  }
+
+  selectColumnOnEnter() {
+    const match = this.filteredColumns()[0];
+    if (match) this.selectColumn(match);
+  }
+
+  selectValue(val: string) {
     const col = this.selectedColumn();
     if (!col) return;
 
-    const newFilters = [...this.filters(), { column: col, value }];
-    this.filters.set(newFilters);
-    this.filtersChange.emit(newFilters);
+    // Update active filters
+    this.activeFilters.update((f) => ({ ...f, [col.key]: val }));
 
-    // remove the column from future dropdowns
-    this.columns = this.columns.filter((c) => c !== col);
+    // Emit to parent immediately
+    this.filtersChange.emit(this.activeFilters());
 
-    // reset UI
+    this.resetInput();
+  }
+
+  selectValueOnEnter() {
+    const col = this.selectedColumn();
+    if (!col) return;
+
+    if (col.type === 'select') {
+      const match = this.possibleValues()[0];
+      if (match) this.selectValue(match);
+    } else {
+      if (this.inputValue()) this.selectValue(this.inputValue());
+    }
+  }
+
+  removeChip(key: string) {
+    this.activeFilters.update((f) => {
+      const { [key]: _, ...rest } = f;
+      //Emit updated filters to parent
+      this.filtersChange.emit(rest);
+      return rest;
+    });
+  }
+
+  clearAll() {
+    this.activeFilters.set({});
+    this.filtersChange.emit({});
+    this.resetInput();
+    this.moreDropdownOpen.set(false);
+  }
+
+  resetInput() {
     this.selectedColumn.set(null);
-    this.possibleValues.set([]);
+    this.inputValue.set('');
+    this.showDropdown.set(false);
   }
 
-  removeFilter(f: FacetFilter) {
-    const updated = this.filters().filter(
-      (x) => !(x.column === f.column && x.value === f.value)
-    );
-    this.filters.set(updated);
-    this.filtersChange.emit(updated);
+  toggleMoreDropdown() {
+    this.moreDropdownOpen.update((v) => !v);
   }
 
-  showColumns() {
-    return this.searchFocused() && !this.selectedColumn();
+  getColumnLabel(key: string) {
+    return this.columns.find((c) => c.key === key)?.label || key;
+  }
+
+  highlightMatch(text: string): string {
+    const query = this.inputValue().toLowerCase();
+    if (!query) return text;
+    const idx = text.toLowerCase().indexOf(query);
+    if (idx === -1) return text;
+    return `${text.substring(0, idx)}<span class="highlight">${text.substring(
+      idx,
+      idx + query.length
+    )}</span>${text.substring(idx + query.length)}`;
+  }
+
+  private onDocumentClick = (event: MouseEvent) => {
+    if (!this.elRef.nativeElement.contains(event.target as Node)) {
+      this.showDropdown.set(false);
+      this.moreDropdownOpen.set(false);
+    }
+  };
+
+  // Emit whenever filters change
+  constructor(private elRef: ElementRef<HTMLElement>) {
+    computed(() => {
+      this.filtersChange.emit(this.activeFilters());
+    });
+  }
+
+  ngOnInit() {
+    document.addEventListener('click', this.onDocumentClick, true);
+  }
+
+  ngOnDestroy() {
+    document.removeEventListener('click', this.onDocumentClick, true);
   }
 }

@@ -1,60 +1,176 @@
 .facet-container {
+  width: 600px;
+  margin: 2rem auto;
+  font-family: Arial, sans-serif;
+}
+
+.search-box {
   position: relative;
-  width: 400px;
-  margin-bottom: 1rem;
+}
+
+.input-wrapper {
+  position: relative;      /* needed for absolute positioning of dropdowns */
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px;
+  min-height: 36px;
+  cursor: text;
 }
 
 .facet-input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  border: none;
+  outline: none;
+  flex: 1;
+  padding: 4px;
+  font-size: 14px;
+}
+
+.facet-input.inline {
+  width: auto;
+  flex: none;
+  min-width: 120px;
+}
+
+.token {
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  padding: 3px 6px;
+  margin-right: 4px;
+  font-size: 14px;
 }
 
 .dropdown {
-  list-style: none;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  margin: 4px 0;
-  padding: 0;
-  background: #fff;
-  max-height: 150px;
-  overflow-y: auto;
   position: absolute;
-  width: 100%;
-  z-index: 2;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: max-content;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  list-style: none;
+  padding: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .dropdown li {
-  padding: 8px;
+  padding: 6px 10px;
   cursor: pointer;
 }
 
 .dropdown li:hover {
-  background: #f0f0f0;
+  background: #f2f2f2;
+}
+
+/* --- Value dropdown alignment --- */
+.value-dropdown {
+  margin-top: 2px;
+  min-width: 150px;
+  max-width: 300px;       /* Optional: constrain width */
+  right: 0;
+  left: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  z-index: 1001;          /* higher than column dropdown */
+}
+
+.value-dropdown li {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.value-dropdown li:hover {
+  background-color: #e6f0ff;
+}
+
+.highlight {
+  background: yellow;
 }
 
 .chips {
+  margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 6px;
 }
 
 .chip {
-  background: #e0e7ff;
-  color: #1e3a8a;
+  background: #e0f3ff;
+  border: 1px solid #90caf9;
+  border-radius: 16px;
   padding: 4px 8px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chip button {
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 14px;
-  color: #1e3a8a;
+  margin-left: 4px;
 }
+
+.clear-all {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.clear-all a {
+  text-decoration: underline;
+  cursor: pointer;
+  color: #007bff;
+}
+
+.more-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.more-text {
+  cursor: pointer;
+  color: #007bff;
+  font-weight: bold;
+  max-width: 80%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.more-text:hover {
+  text-decoration: underline;
+}
+
+.more-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);  /* below the +More link */
+  left: 0;
+  min-width: 180px;
+  max-width: 240px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px;
+  list-style: none;
+  z-index: 1000;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.more-dropdown li {
+  padding: 4px 6px;
+}
+
+.more-dropdown .chip {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
