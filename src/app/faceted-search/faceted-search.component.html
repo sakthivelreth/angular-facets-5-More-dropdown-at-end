@@ -5,16 +5,27 @@
       <ng-container *ngIf="selectedColumn() as col">
         <span class="token">
           {{ col.label }}:
-          <input
-            #valueInput
-            type="text"
-            class="facet-input inline"
-            [placeholder]="col.type === 'select' ? 'Select value' : 'Enter value'"
-            [value]="inputValue()"
-            (input)="onSearchInput($any($event.target).value)"
-            (keydown.enter)="selectValueOnEnter()"
-            (keydown.backspace)="$event.stopPropagation()"
-          />
+          <span class="value-wrapper">
+            <input
+              #valueInput
+              type="text"
+              class="facet-input inline"
+              [placeholder]="col.type === 'select' ? 'Select value' : 'Enter value'"
+              [value]="inputValue()"
+              (input)="onSearchInput($any($event.target).value)"
+              (keydown.enter)="selectValueOnEnter()"
+              (keydown.backspace)="$event.stopPropagation()"
+            />
+
+            <ul
+              class="dropdown value-dropdown"
+              *ngIf="showDropdown() && col.type === 'select' && possibleValues().length"
+            >
+              <li *ngFor="let val of possibleValues()" (click)="selectValue(val)">
+                <span [innerHTML]="highlightMatch(val)"></span>
+              </li>
+            </ul>
+          </span>
         </span>
       </ng-container>
 
@@ -40,7 +51,7 @@
     </ul>
 
     <!-- Value dropdown -->
-    <ul
+    <!--     <ul
       class="dropdown value-dropdown"
       *ngIf="showDropdown() && selectedColumn() && possibleValues().length"
       [style.left.px]="dropdownOffset()"
@@ -48,7 +59,7 @@
       <li *ngFor="let val of possibleValues()" (click)="selectValue(val)">
         <span [innerHTML]="highlightMatch(val)"></span>
       </li>
-    </ul>
+    </ul> -->
 
     <!-- Chips -->
     <div class="chips">

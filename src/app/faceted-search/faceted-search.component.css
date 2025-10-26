@@ -66,16 +66,22 @@
   background: #f2f2f2;
 }
 
-/* --- Value dropdown alignment --- */
+.value-wrapper {
+  position: relative; /* make dropdown relative to input */
+  display: inline-block;
+}
+
 .value-dropdown {
+  position: absolute;
+  top: 100%;       /* directly below input */
+  left: 0;         /* align with left edge of input */
+  min-width: 100%;
   margin-top: 2px;
-  min-width: 150px;
-  max-width: 300px;       /* Optional: constrain width */
-  right: 0;
-  left: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: white;
+  border: 1px solid #ccc;
   border-radius: 6px;
-  z-index: 1001;          /* higher than column dropdown */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
 }
 
 .value-dropdown li {
