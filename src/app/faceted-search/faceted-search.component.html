@@ -69,8 +69,8 @@
       </span>
 
       <ng-container *ngFor="let col of lastVisibleChips()">
-        <span class="chip" [title]="getColumnLabel(col.key) + ': ' + col.value">
-          <span class="chip-label">{{ getColumnLabel(col.key) }}:</span>
+        <span class="chip" [title]="col.label + ': ' + col.value">
+          <span class="chip-label">{{ col.label }}</span>
           <span class="chip-value">{{ col.value }}</span>
           <button (click)="removeChip(col.key)">×</button>
         </span>
@@ -81,8 +81,8 @@
           <span class="more-text" (click)="toggleMoreDropdown()">+ More</span>
           <ul *ngIf="moreDropdownOpen()" class="more-dropdown">
             <li *ngFor="let col of moreChips()">
-              <span class="chip" [title]="getColumnLabel(col.key) + ': ' + col.value">
-                <span class="chip-label">{{ getColumnLabel(col.key) }}:</span>
+              <span class="chip" [title]="col.label + ': ' + col.value">
+                <span class="chip-label">{{ col.label }}:</span>
                 <span class="chip-value">{{ col.value }}</span>
                 <button (click)="removeChip(col.key)">×</button>
               </span>

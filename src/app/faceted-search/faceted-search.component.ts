@@ -34,17 +34,15 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   private removeTokenContainer = false;
 
-  //@Input() columns: Column[] = [];
-
   @Input() columns?: Signal<Column[]>;
 
   @Input() visibleChipCount = 2;
   @Input() dynamicValuesProvider?: (colKey: string, searchTerm: string) => string[] | Promise<string[]>;
 
-  @Output() filtersChange = new EventEmitter<Record<string, string>>();
+  @Output() filtersChange = new EventEmitter<{ label: string; key: string; value: string }[]>();
 
   // Signals
-  activeFilters = signal<Record<string, string>>({});
+  activeFilters = signal<{ label: string; key: string; value: string }[]>([]);
   selectedColumn = signal<Column | null>(null);
   inputValue = signal('');
   showDropdown = signal(false);
@@ -58,13 +56,13 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   hasFilters = computed(() => Object.keys(this.activeFilters()).length > 0);
 
   lastVisibleChips = computed(() => {
-    const entries = Object.entries(this.activeFilters());
-    return entries.slice(-this.visibleChipCount).map(([key, value]) => ({ key, value }));
+    const filters = this.activeFilters();
+    return filters.slice(-this.visibleChipCount);
   });
 
   moreChips = computed(() => {
-    const entries = Object.entries(this.activeFilters());
-    return entries.slice(0, -this.visibleChipCount).map(([key, value]) => ({ key, value }));
+    const filters = this.activeFilters();
+    return filters.slice(0, -this.visibleChipCount);
   });
 
   filteredColumns = computed(() => {
@@ -165,7 +163,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     if (!col) return;
 
     // Update active filters
-    this.activeFilters.update((f) => ({ ...f, [col.key]: val }));
+    this.activeFilters.update((f) => [...f, { key: col.key, value: val, label: col.label }]);
 
     // Emit to parent immediately
     this.filtersChange.emit(this.activeFilters());
@@ -215,22 +213,23 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   }
 
   removeChip(key: string) {
-    this.activeFilters.update((f) => {
-      const { [key]: _, ...rest } = f;
-      //Emit updated filters to parent
-      this.filtersChange.emit(rest);
+    this.activeFilters.update((filters) => {
+      const updated = filters.filter((f) => f.key !== key);
+
+      // Emit updated filters to parent
+      this.filtersChange.emit(updated);
 
       // Hide dropdown when a chip is removed
       this.showDropdown.set(false);
       this.moreDropdownOpen.set(false);
 
-      return rest;
+      return updated;
     });
   }
 
   clearAll() {
-    this.activeFilters.set({});
-    this.filtersChange.emit({});
+    this.activeFilters.set([]);
+    this.filtersChange.emit([]);
     this.resetInput();
     this.moreDropdownOpen.set(false);
   }
@@ -243,10 +242,6 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   toggleMoreDropdown() {
     this.moreDropdownOpen.update((v) => !v);
-  }
-
-  getColumnLabel(key: string) {
-    return this.columns?.().find((c) => c.key === key)?.label || key;
   }
 
   highlightMatch(text: string): string {

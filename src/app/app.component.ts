@@ -10,15 +10,22 @@ import { FacetFilterComponent, Column } from './faceted-search/faceted-search.co
   imports: [NgFor, FacetFilterComponent],
 })
 export class AppComponent implements OnInit {
+  // --- Signals ---
   columns = signal<Column[]>([]);
+  activeFilters = signal<{ label: string; key: string; value: string }[]>([]);
 
-  // preferred column keys that should appear on top
-  preferredKeys = ['operator', 'status', 'location'];
+  data = signal<any[]>([]);
 
+  // Preferred column keys
+  preferredKeys = ['enclosure', 'status', 'location'];
+
+  // --- Lifecycle ---
   ngOnInit() {
     this.fetchColumns();
+    this.fetchData();
   }
 
+  // --- Data setup ---
   fetchColumns() {
     setTimeout(() => {
       const allColumns: Column[] = [
@@ -26,7 +33,7 @@ export class AppComponent implements OnInit {
           key: 'enclosure',
           label: 'Enclosure',
           type: 'select',
-          values: ['BP_PSV_0_1', 'BP_PSV_0_2', 'BP_TNK_1', 'BP_TNK_2', 'BP_PMP_3', 'BP_VALVE_4'],
+          values: ['BP_PSV_0_1', 'BP_VALVE_4'],
         },
         {
           key: 'status',
@@ -37,121 +44,144 @@ export class AppComponent implements OnInit {
         { key: 'description', label: 'Description', type: 'text' },
         { key: 'location', label: 'Location', type: 'select', values: ['Zone A', 'Zone B', 'Zone C', 'Zone D'] },
         { key: 'lastUpdated', label: 'Last Updated', type: 'text' },
-        { key: 'operator', label: 'Operator', type: 'select', values: ['Alice', 'Bob', 'Charlie', 'Diana'] },
+        { key: 'operator', label: 'Operator', type: 'select', values: [] },
         { key: 'temperature', label: 'Temperature (°C)', type: 'text' },
       ];
 
       const reordered = this.reorderColumns(allColumns);
       this.columns.set(reordered);
-    }, 1000);
+    }, 500);
   }
 
-  data = signal([
-    {
-      enclosure: 'BP_PSV_0_1',
-      status: 'Active',
-      description: 'Unit 1',
-      location: 'Zone A',
-      lastUpdated: '2025-10-20',
-      operator: 'Alice',
-      temperature: '75',
-    },
-    {
-      enclosure: 'BP_PSV_0_2',
-      status: 'Inactive',
-      description: 'Unit 2',
-      location: 'Zone B',
-      lastUpdated: '2025-10-18',
-      operator: 'Bob',
-      temperature: '68',
-    },
-    {
-      enclosure: 'BP_TNK_1',
-      status: 'Active',
-      description: 'Tank 1',
-      location: 'Zone C',
-      lastUpdated: '2025-10-22',
-      operator: 'Charlie',
-      temperature: '82',
-    },
-    {
-      enclosure: 'BP_TNK_2',
-      status: 'Maintenance',
-      description: 'Tank 2 under inspection',
-      location: 'Zone D',
-      lastUpdated: '2025-10-19',
-      operator: 'Diana',
-      temperature: '60',
-    },
-    {
-      enclosure: 'BP_PMP_3',
-      status: 'Active',
-      description: 'Pump 3 operational',
-      location: 'Zone A',
-      lastUpdated: '2025-10-21',
-      operator: 'Alice',
-      temperature: '77',
-    },
-    {
-      enclosure: 'BP_VALVE_4',
-      status: 'Decommissioned',
-      description: 'Valve 4 retired',
-      location: 'Zone B',
-      lastUpdated: '2025-10-15',
-      operator: 'Bob',
-      temperature: 'N/A',
-    },
-    {
-      enclosure: 'BP_PSV_0_1',
-      status: 'Maintenance',
-      description: 'Unit 1 scheduled for service',
-      location: 'Zone C',
-      lastUpdated: '2025-10-23',
-      operator: 'Charlie',
-      temperature: '70',
-    },
-    {
-      enclosure: 'BP_TNK_2',
-      status: 'Inactive',
-      description: 'Tank 2 offline',
-      location: 'Zone D',
-      lastUpdated: '2025-10-17',
-      operator: 'Diana',
-      temperature: '65',
-    },
-    {
-      enclosure: 'BP_PMP_3',
-      status: 'Active',
-      description: 'Pump 3 running at full capacity',
-      location: 'Zone A',
-      lastUpdated: '2025-10-24',
-      operator: 'Alice',
-      temperature: '80',
-    },
-    {
-      enclosure: 'BP_VALVE_4',
-      status: 'Active',
-      description: 'Valve 4 reactivated',
-      location: 'Zone B',
-      lastUpdated: '2025-10-16',
-      operator: 'Bob',
-      temperature: '72',
-    },
-  ]);
+  fetchData() {
+    this.data.set([
+      {
+        enclosure: 'BP_PSV_0_1',
+        status: 'Active',
+        description: 'Unit 1',
+        location: 'Zone A',
+        lastUpdated: '2025-10-20',
+        operator: 'Alice',
+        temperature: '75',
+      },
+      {
+        enclosure: 'BP_PSV_0_2',
+        status: 'Inactive',
+        description: 'Unit 2',
+        location: 'Zone B',
+        lastUpdated: '2025-10-18',
+        operator: 'Bob',
+        temperature: '68',
+      },
+      {
+        enclosure: 'BP_TNK_1',
+        status: 'Active',
+        description: 'Tank 1',
+        location: 'Zone C',
+        lastUpdated: '2025-10-22',
+        operator: 'Charlie',
+        temperature: '82',
+      },
+      {
+        enclosure: 'BP_TNK_2',
+        status: 'Maintenance',
+        description: 'Tank 2 under inspection',
+        location: 'Zone D',
+        lastUpdated: '2025-10-19',
+        operator: 'Diana',
+        temperature: '60',
+      },
+      {
+        enclosure: 'BP_PMP_3',
+        status: 'Active',
+        description: 'Pump 3 operational',
+        location: 'Zone A',
+        lastUpdated: '2025-10-21',
+        operator: 'Alice',
+        temperature: '77',
+      },
+      {
+        enclosure: 'BP_VALVE_4',
+        status: 'Decommissioned',
+        description: 'Valve 4 retired',
+        location: 'Zone B',
+        lastUpdated: '2025-10-15',
+        operator: 'Bob',
+        temperature: 'N/A',
+      },
+      {
+        enclosure: 'BP_PSV_0_1',
+        status: 'Maintenance',
+        description: 'Unit 1 scheduled for service',
+        location: 'Zone C',
+        lastUpdated: '2025-10-23',
+        operator: 'Charlie',
+        temperature: '70',
+      },
+      {
+        enclosure: 'BP_TNK_2',
+        status: 'Inactive',
+        description: 'Tank 2 offline',
+        location: 'Zone D',
+        lastUpdated: '2025-10-17',
+        operator: 'Diana',
+        temperature: '65',
+      },
+      {
+        enclosure: 'BP_PMP_3',
+        status: 'Active',
+        description: 'Pump 3 running at full capacity',
+        location: 'Zone A',
+        lastUpdated: '2025-10-24',
+        operator: 'Alice',
+        temperature: '80',
+      },
+      {
+        enclosure: 'BP_VALVE_4',
+        status: 'Active',
+        description: 'Valve 4 reactivated',
+        location: 'Zone B',
+        lastUpdated: '2025-10-16',
+        operator: 'Bob',
+        temperature: '72',
+      },
+    ]);
+  }
 
-  activeFilters = signal<Record<string, string>>({});
+  // --- Derived signals ---
 
+  /**
+   * Automatically removes preferred columns from dropdown
+   * when any preferred column is selected as a filter.
+   */
+  availableColumns = computed(() => {
+    const allCols = this.columns();
+    const activeKeys = this.activeFilters().map((f) => f.key);
+
+    // Check if any preferred column is selected
+    const hasPreferredSelected = activeKeys.some((key) => this.preferredKeys.includes(key));
+
+    // Always remove already selected columns
+    let available = allCols.filter((c) => !activeKeys.includes(c.key));
+
+    // If at least one preferred is selected, remove all other preferreds too
+    if (hasPreferredSelected) {
+      available = available.filter((c) => !this.preferredKeys.includes(c.key));
+    }
+
+    return available;
+  });
+
+  // --- Helpers ---
   reorderColumns(cols: Column[]): Column[] {
     const preferred: Column[] = [];
     const remaining: Column[] = [];
 
-    // Iterate preferredKeys in order
     this.preferredKeys.forEach((key) => {
       const match = cols.find((c) => c.key === key);
       if (match) preferred.push(match);
     });
 
-    // Remaining columns: all that are not in preferredKeys
     remaining.push(...cols.filter((c) => !this.preferredKeys.includes(c.key)));
 
     return [...preferred, ...remaining];
@@ -160,14 +190,11 @@ export class AppComponent implements OnInit {
   filteredData = computed(() => {
     const filters = this.activeFilters();
     return this.data().filter((row) =>
-      Object.entries(filters).every(([key, val]) =>
-        (row as any)[key]?.toString().toLowerCase().includes(val.toLowerCase())
-      )
+      filters.every((f) => (row as any)[f.key]?.toString().toLowerCase().includes(f.value.toLowerCase()))
     );
   });
 
   getColumnValues(colKey: string, searchTerm: string) {
-    // Optional dynamic values provider
     return this.data()
       .map((row) => row[colKey as keyof typeof row])
       .filter((v, i, arr) => v && arr.indexOf(v) === i)

@@ -1,5 +1,5 @@
 <mgui-facet-filter
-  [columns]="columns"
+  [columns]="availableColumns"
   [visibleChipCount]="2"
   [dynamicValuesProvider]="getColumnValues.bind(this)"
   (filtersChange)="activeFilters.set($event)"
@@ -13,7 +13,9 @@
   </thead>
   <tbody>
     <tr *ngFor="let row of filteredData()">
-      <td *ngFor="let col of columns()">{{ $any(row)[col.key] || '' }}</td>
+      <td *ngFor="let col of columns()">
+        {{ $any(row)[col.key] || '' }}
+      </td>
     </tr>
   </tbody>
 </table>
