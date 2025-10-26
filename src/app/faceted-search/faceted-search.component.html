@@ -14,6 +14,7 @@
               [value]="inputValue()"
               (input)="onSearchInput($any($event.target).value)"
               (keydown.enter)="selectValueOnEnter()"
+              (keydown)="onValueKeydown($event)"
               (keydown.backspace)="$event.stopPropagation()"
             />
 
@@ -21,7 +22,11 @@
               class="dropdown value-dropdown"
               *ngIf="showDropdown() && col.type === 'select' && possibleValues().length"
             >
-              <li *ngFor="let val of possibleValues()" (click)="selectValue(val)">
+              <li
+                *ngFor="let val of possibleValues(); let i = index"
+                [class.highlighted]="i === highlightedIndex()"
+                (click)="selectValue(val)"
+              >
                 <span [innerHTML]="highlightMatch(val)"></span>
               </li>
             </ul>
@@ -41,13 +46,18 @@
           (focus)="onFocus()"
           (input)="onSearchInput($any($event.target).value)"
           (keydown.enter)="selectColumnOnEnter()"
+          (keydown)="onColumnKeydown($event)"
         />
       </ng-container>
     </div>
 
     <!-- Column dropdown -->
     <ul class="dropdown" *ngIf="showDropdown() && !selectedColumn()">
-      <li *ngFor="let col of filteredColumns()" (click)="selectColumn(col)">
+      <li
+        *ngFor="let col of filteredColumns(); let i = index"
+        [class.highlighted]="i === highlightedIndex()"
+        (click)="selectColumn(col)"
+      >
         <span [innerHTML]="highlightMatch(col.label)"></span>
       </li>
     </ul>

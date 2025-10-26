@@ -47,6 +47,9 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   moreDropdownOpen = signal(false);
   filteredValues = signal<string[]>([]);
 
+  // Mouse events up/down and enter for dropdown
+  highlightedIndex = signal(-1);
+
   // Computed
   hasFilters = computed(() => Object.keys(this.activeFilters()).length > 0);
 
@@ -89,6 +92,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   // --- Handlers ---
   onFocus() {
+    this.highlightedIndex.set(-1);
     if (!this.removeTokenContainer) {
       this.showDropdown.set(true);
     } else {
@@ -99,6 +103,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   onSearchInput(val: string) {
     this.inputValue.set(val);
     this.showDropdown.set(true);
+    this.highlightedIndex.set(-1);
   }
 
   removeColumn() {
@@ -110,6 +115,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     this.selectedColumn.set(col);
     this.inputValue.set('');
     this.showDropdown.set(col.type === 'select');
+    this.highlightedIndex.set(-1);
 
     // Focus the value input after the column token renders
     setTimeout(() => {
@@ -120,6 +126,32 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   selectColumnOnEnter() {
     const match = this.filteredColumns()[0];
     if (match) this.selectColumn(match);
+  }
+
+  onColumnKeydown(event: KeyboardEvent) {
+    const list = this.filteredColumns();
+    const lastIndex = list.length - 1;
+
+    if (!list.length) return;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this.highlightedIndex.update((i) => (i < lastIndex ? i + 1 : 0));
+        break;
+
+      case 'ArrowUp':
+        event.preventDefault();
+        this.highlightedIndex.update((i) => (i > 0 ? i - 1 : lastIndex));
+        break;
+
+      case 'Enter':
+        event.preventDefault();
+        const selected = list[this.highlightedIndex()];
+        if (selected) this.selectColumn(selected);
+        else this.selectColumnOnEnter(); // fallback to first
+        break;
+    }
   }
 
   selectValue(val: string) {
@@ -147,6 +179,32 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
       if (match) this.selectValue(match);
     } else {
       if (this.inputValue()) this.selectValue(this.inputValue());
+    }
+  }
+
+  onValueKeydown(event: KeyboardEvent) {
+    const list = this.possibleValues();
+    const lastIndex = list.length - 1;
+
+    if (!list.length) return;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this.highlightedIndex.update((i) => (i < lastIndex ? i + 1 : 0));
+        break;
+
+      case 'ArrowUp':
+        event.preventDefault();
+        this.highlightedIndex.update((i) => (i > 0 ? i - 1 : lastIndex));
+        break;
+
+      case 'Enter':
+        event.preventDefault();
+        const selected = list[this.highlightedIndex()];
+        if (selected) this.selectValue(selected);
+        else this.selectValueOnEnter(); // fallback to first
+        break;
     }
   }
 
