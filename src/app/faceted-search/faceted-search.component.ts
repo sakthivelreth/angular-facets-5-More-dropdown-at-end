@@ -130,6 +130,11 @@ export class FacetFilterComponent implements OnInit, OnDestroy, AfterViewChecked
     this.selectedColumn.set(col);
     this.inputValue.set('');
     this.showDropdown.set(col.type === 'select');
+
+    // Focus the value input after the column token renders
+    setTimeout(() => {
+      this.valueInputRef?.nativeElement.focus();
+    });
   }
 
   selectColumnOnEnter() {
