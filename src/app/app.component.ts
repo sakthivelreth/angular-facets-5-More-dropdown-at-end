@@ -33,23 +33,37 @@ export class AppComponent implements OnInit {
           key: 'enclosure',
           label: 'Enclosure',
           type: 'select',
-          values: ['BP_PSV_0_1', 'BP_VALVE_4'],
+          values: ['BP_PSV_0_1', 'BP_PSV_0_2', 'BP_TNK_1', 'BP_TNK_2', 'BP_PMP_3', 'BP_VALVE_4'],
+          preferred: false,
+          mutuallyExclusive: ['status', 'location'],
         },
         {
           key: 'status',
           label: 'Status',
           type: 'select',
           values: ['Active', 'Inactive', 'Maintenance', 'Decommissioned'],
+          preferred: true,
         },
-        { key: 'description', label: 'Description', type: 'text' },
-        { key: 'location', label: 'Location', type: 'select', values: ['Zone A', 'Zone B', 'Zone C', 'Zone D'] },
-        { key: 'lastUpdated', label: 'Last Updated', type: 'text' },
-        { key: 'operator', label: 'Operator', type: 'select', values: [] },
-        { key: 'temperature', label: 'Temperature (°C)', type: 'text' },
+        { key: 'description', label: 'Description', type: 'text', preferred: false },
+        {
+          key: 'location',
+          label: 'Location',
+          type: 'select',
+          values: ['Zone A', 'Zone B', 'Zone C', 'Zone D'],
+          preferred: true,
+        },
+        { key: 'lastUpdated', label: 'Last Updated', type: 'text', preferred: false },
+        {
+          key: 'operator',
+          label: 'Operator',
+          type: 'select',
+          values: ['Alice', 'Bob', 'Charlie', 'Diana'],
+          preferred: true,
+        },
+        { key: 'temperature', label: 'Temperature (°C)', type: 'text', preferred: false },
       ];
 
-      const reordered = this.reorderColumns(allColumns);
-      this.columns.set(reordered);
+      this.columns.set(allColumns);
     }, 500);
   }
 
@@ -157,19 +171,7 @@ export class AppComponent implements OnInit {
   availableColumns = computed(() => {
     const allCols = this.columns();
     const activeKeys = this.activeFilters().map((f) => f.key);
-
-    // Check if any preferred column is selected
-    const hasPreferredSelected = activeKeys.some((key) => this.preferredKeys.includes(key));
-
-    // Always remove already selected columns
-    let available = allCols.filter((c) => !activeKeys.includes(c.key));
-
-    // If at least one preferred is selected, remove all other preferreds too
-    if (hasPreferredSelected) {
-      available = available.filter((c) => !this.preferredKeys.includes(c.key));
-    }
-
-    return available;
+    return allCols.filter((c) => !activeKeys.includes(c.key)); // only exclude selected
   });
 
   // --- Helpers ---

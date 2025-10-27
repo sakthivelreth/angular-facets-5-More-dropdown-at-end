@@ -19,6 +19,8 @@ export interface Column {
   label: string;
   type: 'text' | 'select';
   values?: string[];
+  preferred?: boolean;
+  mutuallyExclusive?: string[];
 }
 
 @Component({
@@ -53,7 +55,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   highlightedIndex = signal(-1);
 
   // Computed
-  hasFilters = computed(() => Object.keys(this.activeFilters()).length > 0);
+  hasFilters = computed(() => this.activeFilters().length > 0);
 
   lastVisibleChips = computed(() => {
     const filters = this.activeFilters();
@@ -68,7 +70,15 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   filteredColumns = computed(() => {
     const q = this.inputValue().toLowerCase();
     const activeKeys = Object.keys(this.activeFilters());
-    return this.columns?.().filter((c) => !activeKeys.includes(c.key) && c.label.toLowerCase().includes(q));
+
+    const all = this.columns?.() ?? [];
+    const filtered = all.filter((c) => !activeKeys.includes(c.key) && c.label.toLowerCase().includes(q));
+
+    // Keep original order — just *group* preferred first without sorting alphabetically
+    const preferred = filtered.filter((c) => c.preferred);
+    const nonPreferred = filtered.filter((c) => !c.preferred);
+
+    return [...preferred, ...nonPreferred];
   });
 
   possibleValues = computed(() => {
