@@ -45,7 +45,6 @@
           [value]="inputValue()"
           (focus)="onFocus()"
           (input)="onSearchInput($any($event.target).value)"
-          (keydown.enter)="selectColumnOnEnter()"
           (keydown)="onColumnKeydown($event)"
         />
       </ng-container>
