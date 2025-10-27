@@ -34,7 +34,7 @@ export class AppComponent implements OnInit {
           label: 'Enclosure',
           type: 'select',
           values: ['BP_PSV_0_1', 'BP_PSV_0_2', 'BP_TNK_1', 'BP_TNK_2', 'BP_PMP_3', 'BP_VALVE_4'],
-          preferred: false,
+          preferred: true,
           mutuallyExclusive: ['status', 'location'],
         },
         {
@@ -43,6 +43,7 @@ export class AppComponent implements OnInit {
           type: 'select',
           values: ['Active', 'Inactive', 'Maintenance', 'Decommissioned'],
           preferred: true,
+          mutuallyExclusive: ['enclosure', 'location'],
         },
         { key: 'description', label: 'Description', type: 'text', preferred: false },
         {
@@ -51,6 +52,7 @@ export class AppComponent implements OnInit {
           type: 'select',
           values: ['Zone A', 'Zone B', 'Zone C', 'Zone D'],
           preferred: true,
+          mutuallyExclusive: ['status'],
         },
         { key: 'lastUpdated', label: 'Last Updated', type: 'text', preferred: false },
         {
@@ -169,9 +171,7 @@ export class AppComponent implements OnInit {
    * when any preferred column is selected as a filter.
    */
   availableColumns = computed(() => {
-    const allCols = this.columns();
-    const activeKeys = this.activeFilters().map((f) => f.key);
-    return allCols.filter((c) => !activeKeys.includes(c.key)); // only exclude selected
+    return this.columns();
   });
 
   // --- Helpers ---

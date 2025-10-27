@@ -35,6 +35,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   @ViewChild('valueInput', { read: ElementRef }) valueInputRef?: ElementRef<HTMLInputElement>;
 
   private removeTokenContainer = false;
+  private allColumnsCache: Column[] = [];
 
   @Input() columns?: Signal<Column[]>;
 
@@ -56,29 +57,30 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   // Computed
   hasFilters = computed(() => this.activeFilters().length > 0);
-
-  lastVisibleChips = computed(() => {
-    const filters = this.activeFilters();
-    return filters.slice(-this.visibleChipCount);
-  });
-
-  moreChips = computed(() => {
-    const filters = this.activeFilters();
-    return filters.slice(0, -this.visibleChipCount);
-  });
+  lastVisibleChips = computed(() => this.activeFilters().slice(-this.visibleChipCount));
+  moreChips = computed(() => this.activeFilters().slice(0, -this.visibleChipCount));
 
   filteredColumns = computed(() => {
     const q = this.inputValue().toLowerCase();
-    const activeKeys = Object.keys(this.activeFilters());
+    const all = this.allColumnsCache.length ? this.allColumnsCache : this.columns?.() ?? [];
+    const filters = this.activeFilters();
+    const activeKeys = filters.map((f) => f.key);
 
-    const all = this.columns?.() ?? [];
-    const filtered = all.filter((c) => !activeKeys.includes(c.key) && c.label.toLowerCase().includes(q));
+    const mutuallyExcluded = new Set<string>();
+    for (const f of filters) {
+      const col = all.find((c) => c.key === f.key);
+      col?.mutuallyExclusive?.forEach((k) => mutuallyExcluded.add(k));
+    }
 
-    // Keep original order — just *group* preferred first without sorting alphabetically
+    // Preserve original order; just filter
+    const filtered = all.filter(
+      (c) => !activeKeys.includes(c.key) && !mutuallyExcluded.has(c.key) && c.label.toLowerCase().includes(q)
+    );
+
+    // Preferred first (keep order)
     const preferred = filtered.filter((c) => c.preferred);
-    const nonPreferred = filtered.filter((c) => !c.preferred);
-
-    return [...preferred, ...nonPreferred];
+    const others = filtered.filter((c) => !c.preferred);
+    return [...preferred, ...others];
   });
 
   possibleValues = computed(() => {
@@ -281,6 +283,12 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     document.addEventListener('click', this.onDocumentClick, true);
+    if (this.columns) {
+      const cols = this.columns();
+      if (cols && !this.allColumnsCache.length) {
+        this.allColumnsCache = [...cols];
+      }
+    }
   }
 
   ngOnDestroy() {
