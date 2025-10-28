@@ -44,6 +44,7 @@ export class AppComponent implements OnInit {
           values: ['Active', 'Inactive', 'Maintenance', 'Decommissioned'],
           preferred: true,
           mutuallyExclusive: ['enclosure', 'location'],
+          multi: true,
         },
         { key: 'description', label: 'Description', type: 'text', preferred: false },
         {
@@ -174,6 +175,10 @@ export class AppComponent implements OnInit {
     return this.columns();
   });
 
+  availableColumns1 = computed(() => {
+    console.log('activeFilters', this.activeFilters());
+  });
+
   // --- Helpers ---
   reorderColumns(cols: Column[]): Column[] {
     const preferred: Column[] = [];
@@ -191,8 +196,25 @@ export class AppComponent implements OnInit {
 
   filteredData = computed(() => {
     const filters = this.activeFilters();
+    const grouped = filters.reduce((map, f) => {
+      (map[f.key] ??= []).push(f.value.toLowerCase());
+      return map;
+    }, {} as Record<string, string[]>);
+
     return this.data().filter((row) =>
-      filters.every((f) => (row as any)[f.key]?.toString().toLowerCase().includes(f.value.toLowerCase()))
+      Object.entries(grouped).every(([key, values]) => {
+        const col = this.columns().find((c) => c.key === key);
+        const cellValue = (row as any)[key]?.toString().toLowerCase();
+        if (!cellValue) return false;
+
+        if (col?.type === 'select') {
+          // OR-match for any of the select values
+          return values.includes(cellValue);
+        } else {
+          // Match if any of the values is included
+          return values.some((v) => cellValue.includes(v));
+        }
+      })
     );
   });
 

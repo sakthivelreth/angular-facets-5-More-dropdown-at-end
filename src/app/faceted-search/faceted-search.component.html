@@ -13,7 +13,6 @@
               [placeholder]="col.type === 'select' ? 'Select value' : 'Enter value'"
               [value]="inputValue()"
               (input)="onSearchInput($any($event.target).value)"
-              (keydown.enter)="selectValueOnEnter()"
               (keydown)="onValueKeydown($event)"
               (keydown.backspace)="$event.stopPropagation()"
             />
@@ -25,9 +24,23 @@
               <li
                 *ngFor="let val of possibleValues(); let i = index"
                 [class.highlighted]="i === highlightedIndex()"
-                (click)="selectValue(val)"
+                (click)="onRowClick($event, col, val)"
               >
-                <span [innerHTML]="highlightMatch(val)"></span>
+                <div class="value-option" (click)="$event.stopPropagation()">
+                  <input
+                    *ngIf="col?.multi"
+                    type="checkbox"
+                    [checked]="!!selectedValuesMap().get(col.key)?.has(val)"
+                    (click)="onCheckboxClick($event, col, val)"
+                  />
+                  <span (click)="onRowClick($event, col, val)" [innerHTML]="highlightMatch(val)"></span>
+                </div>
+              </li>
+
+              <!-- Apply + Close buttons for multi-select -->
+              <li *ngIf="col.multi" class="apply-row">
+                <button class="apply-btn" (click)="applyMultiSelection()">Apply</button>
+                <button class="close-btn" (click)="cancelMultiSelection()">Close</button>
               </li>
             </ul>
           </span>
@@ -67,23 +80,24 @@
         <a href="#">Clear All</a>
       </span>
 
-      <ng-container *ngFor="let col of lastVisibleChips()">
-        <span class="chip" [title]="col.label + ': ' + col.value">
-          <span class="chip-label">{{ col.label }}</span>
-          <span class="chip-value">{{ col.value }}</span>
-          <button (click)="removeChip(col.key)">×</button>
+      <!-- Use groupedFilters (grouped objects with values[]) -->
+      <ng-container *ngFor="let group of groupedFilters()">
+        <span class="chip" [title]="group.label + ': ' + (group.values.join(', ') || '')">
+          <span class="chip-label">{{ group.label }}:</span>
+          <span class="chip-value">{{ group.values.join(', ') }}</span>
+          <button (click)="removeChip(group.key)">×</button>
         </span>
       </ng-container>
 
-      <ng-container *ngIf="moreChips().length > 0">
+      <ng-container *ngIf="moreGroups().length > 0">
         <span class="more-wrapper">
           <span class="more-text" (click)="toggleMoreDropdown()">+ More</span>
           <ul *ngIf="moreDropdownOpen()" class="more-dropdown">
-            <li *ngFor="let col of moreChips()">
-              <span class="chip" [title]="col.label + ': ' + col.value">
-                <span class="chip-label">{{ col.label }}:</span>
-                <span class="chip-value">{{ col.value }}</span>
-                <button (click)="removeChip(col.key)">×</button>
+            <li *ngFor="let group of moreGroups()">
+              <span class="chip" [title]="group.label + ': ' + group.values.join(', ')">
+                <span class="chip-label">{{ group.label }}:</span>
+                <span class="chip-value">{{ group.values.join(', ') }}</span>
+                <button (click)="removeChip(group.key)">×</button>
               </span>
             </li>
           </ul>

@@ -84,15 +84,6 @@
   z-index: 1001;
 }
 
-.value-dropdown li {
-  padding: 6px 10px;
-  cursor: pointer;
-}
-
-.value-dropdown li:hover {
-  background-color: #e6f0ff;
-}
-
 .highlight {
   background: yellow;
 }
@@ -235,4 +226,59 @@
 
 .dropdown li.highlighted {
   background-color: #e6f0ff;
+}
+
+.apply-row {
+  text-align: right;
+  padding: 4px 8px;
+}
+
+.apply-row button {
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.value-option input {
+  cursor: pointer;
+}
+
+/* Make the entire LI clickable and show hover state across full width */
+.value-dropdown li {
+  display: flex;             /* ensure full-width flex alignment */
+  align-items: center;
+  padding: 6px 10px;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.value-dropdown li:hover {
+  background-color: #e6f0ff; /* keep same hover color */
+}
+
+/* The inner value-option flex stays neat */
+.value-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;                   /* make it stretch to fill the li */
+}
+
+/* Ensure text takes available space and can wrap nicely */
+.value-option span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Keep checkbox aligned and clickable */
+.value-option input[type="checkbox"] {
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Highlighted item (keyboard navigation) */
+.value-dropdown li.highlighted {
+  background-color: #dbe9ff !important;
 }
