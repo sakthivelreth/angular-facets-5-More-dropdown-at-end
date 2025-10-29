@@ -277,7 +277,7 @@
   background-color: #dbe9ff !important;
 }
 
-//* Only apply hover to value rows, not action row */
+/* Only apply hover to value rows, not action row */
 .value-dropdown li.value-item:hover {
   background-color: #e6f0ff;
 }
