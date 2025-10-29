@@ -67,6 +67,9 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   moreDropdownOpen = signal(false);
   filteredValues = signal<string[]>([]);
 
+  // Temporary selection map for multi-select
+  tempSelectedValues = signal<Map<string, Set<string>>>(new Map());
+
   // Mouse events up/down and enter for dropdown
   highlightedIndex = signal(-1);
 
@@ -131,6 +134,19 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     return [...preferred, ...others];
   });
 
+  // Todo: This method is to add the selected text in the input field after each selection. The text input modal should bind this method to show the value. Its not used at present
+  displayInputValue = computed(() => {
+    const col = this.selectedColumn();
+    if (!col) return this.inputValue(); // when no column selected → normal input text
+    if (col.multi) {
+      const selected = Array.from(this.tempSelectedValues().get(col.key) ?? []);
+      return selected.length
+        ? `${selected.join(', ')}${this.inputValue() ? ', ' + this.inputValue() : ''}`
+        : this.inputValue();
+    }
+    return this.inputValue();
+  });
+
   possibleValues = computed(() => {
     const col = this.selectedColumn();
     if (!col || col.type !== 'select') return []; //only select columns
@@ -179,7 +195,14 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     this.showDropdown.set(col.type === 'select');
     this.highlightedIndex.set(-1);
 
-    // Focus the value input after the column token renders
+    // Initialize temp selections for multi-select
+    if (col.multi) {
+      const activeSet = this.selectedValuesMap().get(col.key) ?? new Set<string>();
+      const temp = new Map(this.tempSelectedValues());
+      temp.set(col.key, new Set([...activeSet]));
+      this.tempSelectedValues.set(temp);
+    }
+
     setTimeout(() => {
       this.valueInputRef?.nativeElement.focus();
     });
@@ -224,30 +247,13 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
     this.activeFilters.update((filters) => {
       const existing = [...filters];
-      const sameCol = existing.filter((f) => f.key === col.key);
-      const alreadySelected = sameCol.some((f) => f.value === val);
-
-      if (col.multi) {
-        // toggle selection for multi-select
-        if (alreadySelected) {
-          return existing.filter((f) => !(f.key === col.key && f.value === val));
-        } else {
-          return [...existing, { key: col.key, label: col.label, value: val }];
-        }
-      } else {
-        // single-select fallback: replace any existing value for the column
-        const others = existing.filter((f) => f.key !== col.key);
-        return [...others, { key: col.key, label: col.label, value: val }];
-      }
+      const others = existing.filter((f) => f.key !== col.key);
+      return [...others, { key: col.key, label: col.label, value: val }];
     });
 
     this.filtersChange.emit(this.activeFilters());
-
-    // For single-select → close after one pick
-    if (!col.multi) {
-      this.resetInput();
-      setTimeout(() => this.searchInputRef?.nativeElement.focus());
-    }
+    this.resetInput();
+    setTimeout(() => this.searchInputRef?.nativeElement.focus());
   }
 
   onRowClick(event: MouseEvent, col: Column, val: string) {
@@ -269,36 +275,13 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   }
 
   toggleValue(col: Column, match: string) {
-    console.log('Value toggled for column:', col, 'with value:', match);
-    // Get current active filters
-    const current = this.activeFilters();
-
-    // Find existing entries for this column
-    const existing = current.filter((f) => f.key === col.key).map((f) => f.value);
-    const isSelected = existing.includes(match);
-
-    const updatedValues = isSelected
-      ? existing.filter((v) => v !== match) // remove value
-      : [...existing, match]; // add value
-
-    // Remove all previous entries of this column
-    const newFilters = current.filter((f) => f.key !== col.key);
-
-    // Add back updated ones
-    updatedValues.forEach((v) =>
-      newFilters.push({
-        key: col.key,
-        label: col.label,
-        value: v,
-      })
-    );
-
-    this.activeFilters.set(newFilters);
-
-    // If none of this column’s values remain, clear selectedColumn()
-    if (updatedValues.length === 0) {
-      this.selectedColumn.set(null);
-    }
+    if (!col.multi) return;
+    const temp = new Map(this.tempSelectedValues());
+    const set = new Set(temp.get(col.key) ?? []);
+    set.has(match) ? set.delete(match) : set.add(match);
+    temp.set(col.key, set);
+    this.tempSelectedValues.set(temp);
+    this.inputValue.set('');
   }
 
   onValueKeydown(event: KeyboardEvent) {
@@ -349,10 +332,23 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   }
 
   applyMultiSelection() {
+    const col = this.selectedColumn();
+    if (!col) return;
+
+    const temp = this.tempSelectedValues();
+    const selectedValues = temp.get(col.key) ?? new Set<string>();
+
+    const newFilters = this.activeFilters()
+      .filter((f) => f.key !== col.key)
+      .concat([...selectedValues].map((v) => ({ key: col.key, label: col.label, value: v })));
+
+    this.activeFilters.set(newFilters);
+
     // Emit the current filters to the parent
-    this.filtersChange.emit(this.activeFilters());
+    this.filtersChange.emit(newFilters);
 
     // Reset and close dropdown
+    this.tempSelectedValues.set(new Map());
     this.resetInput();
 
     // Refocus the main search input
@@ -361,8 +357,8 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   /** User clicks "Close" in multi-select mode (cancel) */
   cancelMultiSelection() {
-    console.log('Close clicked — cancelling selection');
-    this.resetInput(); // just close & clear without emitting
+    this.tempSelectedValues.set(new Map());
+    this.resetInput();
   }
 
   removeChip(key: string) {
@@ -418,7 +414,10 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   // Emit whenever filters change
   constructor(private elRef: ElementRef<HTMLElement>) {
+    // reactive emit for non-multi filters only
     computed(() => {
+      const col = this.selectedColumn();
+      if (!col || col.multi) return;
       this.filtersChange.emit(this.activeFilters());
     });
   }

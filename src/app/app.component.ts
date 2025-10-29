@@ -62,6 +62,7 @@ export class AppComponent implements OnInit {
           type: 'select',
           values: ['Alice', 'Bob', 'Charlie', 'Diana'],
           preferred: true,
+          multi: true,
         },
         { key: 'temperature', label: 'Temperature (°C)', type: 'text', preferred: false },
       ];

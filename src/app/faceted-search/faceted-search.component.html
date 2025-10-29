@@ -30,17 +30,19 @@
                   <input
                     *ngIf="col?.multi"
                     type="checkbox"
-                    [checked]="!!selectedValuesMap().get(col.key)?.has(val)"
+                    [checked]="tempSelectedValues().get(col.key)?.has(val)"
                     (click)="onCheckboxClick($event, col, val)"
                   />
                   <span (click)="onRowClick($event, col, val)" [innerHTML]="highlightMatch(val)"></span>
                 </div>
               </li>
 
-              <!-- Apply + Close buttons for multi-select -->
-              <li *ngIf="col.multi" class="apply-row">
-                <button class="apply-btn" (click)="applyMultiSelection()">Apply</button>
-                <button class="close-btn" (click)="cancelMultiSelection()">Close</button>
+              <!-- Apply + Close buttons -->
+              <li *ngIf="col.multi" class="apply-row no-hover">
+                <div class="button-row">
+                  <button class="dropdown-btn close-btn" (click)="cancelMultiSelection()">Close</button>
+                  <button class="dropdown-btn apply-btn" (click)="applyMultiSelection()">Apply</button>
+                </div>
               </li>
             </ul>
           </span>
@@ -81,7 +83,7 @@
       </span>
 
       <!-- Use groupedFilters (grouped objects with values[]) -->
-      <ng-container *ngFor="let group of groupedFilters()">
+      <ng-container *ngFor="let group of lastVisibleGroups()">
         <span class="chip" [title]="group.label + ': ' + (group.values.join(', ') || '')">
           <span class="chip-label">{{ group.label }}:</span>
           <span class="chip-value">{{ group.values.join(', ') }}</span>

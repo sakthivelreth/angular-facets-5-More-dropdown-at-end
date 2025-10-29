@@ -228,16 +228,6 @@
   background-color: #e6f0ff;
 }
 
-.apply-row {
-  text-align: right;
-  padding: 4px 8px;
-}
-
-.apply-row button {
-  padding: 4px 8px;
-  cursor: pointer;
-}
-
 .value-option input {
   cursor: pointer;
 }
@@ -281,4 +271,62 @@
 /* Highlighted item (keyboard navigation) */
 .value-dropdown li.highlighted {
   background-color: #dbe9ff !important;
+}
+
+//* Only apply hover to value rows, not action row */
+.value-dropdown li.value-item:hover {
+  background-color: #e6f0ff;
+}
+
+/* Prevent hover style for apply-row and divider */
+.value-dropdown li.no-hover:hover,
+.value-dropdown li.dropdown-divider:hover {
+  background: transparent;
+}
+
+/* Divider line */
+.dropdown-divider {
+  border-top: 1px solid #ddd;
+  margin: 4px 0;
+}
+
+/* Apply/Close action row */
+.apply-row {
+  display: flex;
+  justify-content: flex-end;
+  background: #fafafa;
+  padding: 6px 10px;
+  border-top: 1px solid #ddd;
+}
+
+/* Strict scoping for dropdown buttons only */
+.value-dropdown .dropdown-btn {
+  all: unset; /* reset inherited .token button styles */
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 13px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-align: center;
+}
+
+/* Specific colors */
+.value-dropdown .close-btn {
+  background: #f8f9fa;
+  color: #333;
+}
+.value-dropdown .close-btn:hover {
+  background: #e9ecef;
+}
+
+.value-dropdown .apply-btn {
+  background: #007bff;
+  border-color: #007bff;
+  color: #fff;
+  margin-left: 8px;
+}
+.value-dropdown .apply-btn:hover {
+  background: #0069d9;
 }
