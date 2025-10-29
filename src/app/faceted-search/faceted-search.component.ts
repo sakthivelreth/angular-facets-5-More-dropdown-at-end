@@ -57,6 +57,10 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   @Input() visibleChipCount = 2;
   @Input() dynamicValuesProvider?: (colKey: string, searchTerm: string) => string[] | Promise<string[]>;
 
+  //Basid search change event emit
+  @Output() basicSearchChange = new EventEmitter<string>(); // <— NEW
+
+  //Advanced search change event emit
   @Output() filtersChange = new EventEmitter<ActiveFilter[]>();
 
   // Signals
@@ -72,6 +76,10 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   // Mouse events up/down and enter for dropdown
   highlightedIndex = signal(-1);
+
+  // Search mode change and capture the basic search string
+  isAdvancedMode = signal(false);
+  basicSearchText = signal('');
 
   // Computeds
   hasFilters = computed(() => this.activeFilters().length > 0);
@@ -434,5 +442,27 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     document.removeEventListener('click', this.onDocumentClick, true);
+  }
+
+  // Toggle logic for basic and advanced search switches
+  toggleMode() {
+    this.isAdvancedMode.update((v) => !v);
+    this.resetInput();
+
+    if (!this.isAdvancedMode()) {
+      // reset advanced filters when switching to basic
+      this.activeFilters.set([]);
+      this.filtersChange.emit([]);
+    } else {
+      // reset basic text when switching to advanced
+      this.basicSearchText.set('');
+      this.basicSearchChange.emit('');
+    }
+  }
+
+  //Capture the basic search string and emit to the caller
+  onBasicSearchInput(val: string) {
+    this.basicSearchText.set(val);
+    this.basicSearchChange.emit(val);
   }
 }

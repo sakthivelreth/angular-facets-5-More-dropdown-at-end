@@ -12,6 +12,8 @@ import { FacetFilterComponent, Column } from './faceted-search/faceted-search.co
 export class AppComponent implements OnInit {
   // --- Signals ---
   columns = signal<Column[]>([]);
+
+  basicSearch = signal('');
   activeFilters = signal<{ label: string; key: string; value: string }[]>([]);
 
   data = signal<any[]>([]);
@@ -51,7 +53,7 @@ export class AppComponent implements OnInit {
           key: 'location',
           label: 'Location',
           type: 'select',
-          values: ['Zone A', 'Zone B', 'Zone C', 'Zone D'],
+          values: [],
           preferred: true,
           multi: true,
           mutuallyExclusive: ['status'],
@@ -188,7 +190,17 @@ export class AppComponent implements OnInit {
     return [...preferred, ...remaining];
   }
 
+  onBasicSearch(term: string) {
+    this.basicSearch.set(term);
+  }
+
   filteredData = computed(() => {
+    //basic search
+    const search = this.basicSearch().trim().toLowerCase();
+    if (search) {
+      return this.data().filter((row) => Object.values(row).some((v) => v?.toString().toLowerCase().includes(search)));
+    }
+
     const filters = this.activeFilters();
     const grouped = filters.reduce((map, f) => {
       (map[f.key] ??= []).push(f.value.toLowerCase());

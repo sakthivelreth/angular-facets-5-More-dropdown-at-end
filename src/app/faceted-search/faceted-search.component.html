@@ -1,5 +1,26 @@
 <div class="facet-container">
-  <div class="search-box">
+  <!-- Top right basic/advanced toggle -->
+  <div class="filter-toggle">
+    <a href="#" (click)="$event.preventDefault(); toggleMode()">
+      {{ isAdvancedMode() ? 'Basic Search' : 'Advanced Search' }}
+    </a>
+  </div>
+
+  <!-- Basic Mode search -->
+  <div *ngIf="!isAdvancedMode()" class="search-box">
+    <div class="input-wrapper">
+      <input
+        type="text"
+        class="facet-input inline"
+        placeholder="Search..."
+        [value]="basicSearchText()"
+        (input)="onBasicSearchInput($any($event.target).value)"
+      />
+    </div>
+  </div>
+
+  <!-- Advanced Mode search -->
+  <div *ngIf="isAdvancedMode()" class="search-box">
     <div class="input-wrapper" (click)="onFocus()">
       <!-- Selected column token + input -->
       <ng-container *ngIf="selectedColumn() as col">
@@ -37,7 +58,7 @@
                 </div>
               </li>
 
-              <!-- Apply + Close buttons -->
+              <!-- Apply + Close buttons for multi-select -->
               <li *ngIf="col.multi" class="apply-row no-hover">
                 <div class="button-row">
                   <button class="dropdown-btn close-btn" (click)="cancelMultiSelection()">Close</button>
@@ -82,7 +103,7 @@
         <a href="#">Clear All</a>
       </span>
 
-      <!-- Use groupedFilters (grouped objects with values[]) -->
+      <!-- Use groupedFilters and show last N visible chips -->
       <ng-container *ngFor="let group of lastVisibleGroups()">
         <span class="chip" [title]="group.label + ': ' + (group.values.join(', ') || '')">
           <span class="chip-label">{{ group.label }}:</span>
@@ -91,6 +112,7 @@
         </span>
       </ng-container>
 
+      <!-- Use moreGroups to show the previous N chips inside the more option -->
       <ng-container *ngIf="moreGroups().length > 0">
         <span class="more-wrapper">
           <span class="more-text" (click)="toggleMoreDropdown()">+ More</span>

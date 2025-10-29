@@ -1,4 +1,8 @@
 .facet-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   width: 600px;
   margin: 2rem auto;
   font-family: Arial, sans-serif;
@@ -16,7 +20,7 @@
   border: 1px solid #ccc;
   border-radius: 6px;
   padding: 6px;
-  min-height: 36px;
+  min-height: 25px;
   cursor: text;
 }
 
@@ -329,4 +333,23 @@
 }
 .value-dropdown .apply-btn:hover {
   background: #0069d9;
+}
+
+.filter-toggle {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 13px;
+}
+
+.filter-toggle a {
+  text-decoration: underline;
+  color: #0078d4;
+  cursor: pointer;
+}
+
+.basic-search-box input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }

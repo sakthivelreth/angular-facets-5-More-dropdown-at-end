@@ -1,8 +1,9 @@
 <mgui-facet-filter
   [columns]="availableColumns"
-  [visibleChipCount]="2"
+  [visibleChipCount]="3"
   [dynamicValuesProvider]="getColumnValues.bind(this)"
   (filtersChange)="activeFilters.set($event)"
+  (basicSearchChange)="onBasicSearch($event)"
 ></mgui-facet-filter>
 
 <table>
