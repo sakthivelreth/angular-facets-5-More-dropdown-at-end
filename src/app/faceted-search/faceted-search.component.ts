@@ -134,7 +134,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     return [...preferred, ...others];
   });
 
-  // Todo: This method is to add the selected text in the input field after each selection. The text input modal should bind this method to show the value. Its not used at present
+  // Clean: This method is to add the selected text in the input field after each selection. The text input modal should bind this method to show the value. Not using this now
   displayInputValue = computed(() => {
     const col = this.selectedColumn();
     if (!col) return this.inputValue(); // when no column selected → normal input text

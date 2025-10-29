@@ -16,7 +16,7 @@ export class AppComponent implements OnInit {
 
   data = signal<any[]>([]);
 
-  // Preferred column keys
+  // Clean: Preferred column keys. Not using this now
   preferredKeys = ['enclosure', 'status', 'location'];
 
   // --- Lifecycle ---
@@ -34,7 +34,7 @@ export class AppComponent implements OnInit {
           label: 'Enclosure',
           type: 'select',
           values: ['BP_PSV_0_1', 'BP_PSV_0_2', 'BP_TNK_1', 'BP_TNK_2', 'BP_PMP_3', 'BP_VALVE_4'],
-          preferred: true,
+          preferred: false,
           mutuallyExclusive: ['status', 'location'],
         },
         {
@@ -53,6 +53,7 @@ export class AppComponent implements OnInit {
           type: 'select',
           values: ['Zone A', 'Zone B', 'Zone C', 'Zone D'],
           preferred: true,
+          multi: true,
           mutuallyExclusive: ['status'],
         },
         { key: 'lastUpdated', label: 'Last Updated', type: 'text', preferred: false },
@@ -167,20 +168,12 @@ export class AppComponent implements OnInit {
   }
 
   // --- Derived signals ---
-
-  /**
-   * Automatically removes preferred columns from dropdown
-   * when any preferred column is selected as a filter.
-   */
   availableColumns = computed(() => {
     return this.columns();
   });
 
-  availableColumns1 = computed(() => {
-    console.log('activeFilters', this.activeFilters());
-  });
-
   // --- Helpers ---
+  // Clean: To reorder the columns based on the preferredKeys array. Not using this now
   reorderColumns(cols: Column[]): Column[] {
     const preferred: Column[] = [];
     const remaining: Column[] = [];
@@ -219,6 +212,7 @@ export class AppComponent implements OnInit {
     );
   });
 
+  // Clean: Show the values dynamically base on the column selection with respect to available entries in the table. Not using this now
   getColumnValues(colKey: string, searchTerm: string) {
     return this.data()
       .map((row) => row[colKey as keyof typeof row])
