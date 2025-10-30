@@ -1,6 +1,8 @@
 <mgui-facet-filter
-  [columns]="availableColumns"
+  [isAdvancedModeInput]="false"
   [visibleChipCount]="3"
+  [preSelectedFilters]="preSelectedFilters"
+  [columns]="columns"
   [dynamicValuesProvider]="getColumnValues.bind(this)"
   (filtersChange)="activeFilters.set($event)"
   (basicSearchChange)="onBasicSearch($event)"
@@ -9,12 +11,12 @@
 <table>
   <thead>
     <tr>
-      <th *ngFor="let col of columns()">{{ col.label }}</th>
+      <th *ngFor="let col of columns">{{ col.label }}</th>
     </tr>
   </thead>
   <tbody>
     <tr *ngFor="let row of filteredData()">
-      <td *ngFor="let col of columns()">
+      <td *ngFor="let col of columns">
         {{ $any(row)[col.key] || '' }}
       </td>
     </tr>

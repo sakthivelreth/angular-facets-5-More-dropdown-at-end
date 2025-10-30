@@ -1,6 +1,6 @@
 import { Component, signal, computed, OnInit } from '@angular/core';
 import { NgFor } from '@angular/common';
-import { FacetFilterComponent, Column } from './faceted-search/faceted-search.component';
+import { FacetFilterComponent, Column, ActiveFilter } from './faceted-search/faceted-search.component';
 
 @Component({
   selector: 'app-root',
@@ -10,11 +10,16 @@ import { FacetFilterComponent, Column } from './faceted-search/faceted-search.co
   imports: [NgFor, FacetFilterComponent],
 })
 export class AppComponent implements OnInit {
-  // --- Signals ---
-  columns = signal<Column[]>([]);
+  columns: Column[] = [];
 
   basicSearch = signal('');
-  activeFilters = signal<{ label: string; key: string; value: string }[]>([]);
+  activeFilters = signal<ActiveFilter[]>([]);
+
+  //Show the preselected filters with chips and filtered table
+  preSelectedFilters = [
+    { key: 'status', label: 'Status', value: 'Active' },
+    { key: 'location', label: 'Location', value: 'Zone A' },
+  ];
 
   data = signal<any[]>([]);
 
@@ -70,7 +75,7 @@ export class AppComponent implements OnInit {
         { key: 'temperature', label: 'Temperature (°C)', type: 'text', preferred: false },
       ];
 
-      this.columns.set(allColumns);
+      this.columns = allColumns;
     }, 500);
   }
 
@@ -169,11 +174,6 @@ export class AppComponent implements OnInit {
     ]);
   }
 
-  // --- Derived signals ---
-  availableColumns = computed(() => {
-    return this.columns();
-  });
-
   // --- Helpers ---
   // Clean: To reorder the columns based on the preferredKeys array. Not using this now
   reorderColumns(cols: Column[]): Column[] {
@@ -209,7 +209,7 @@ export class AppComponent implements OnInit {
 
     return this.data().filter((row) =>
       Object.entries(grouped).every(([key, values]) => {
-        const col = this.columns().find((c) => c.key === key);
+        const col = this.columns.find((c) => c.key === key);
         const cellValue = (row as any)[key]?.toString().toLowerCase();
         if (!cellValue) return false;
 

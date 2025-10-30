@@ -1,6 +1,7 @@
 import {
   Component,
   Input,
+  input,
   Output,
   EventEmitter,
   signal,
@@ -9,7 +10,7 @@ import {
   OnDestroy,
   ElementRef,
   ViewChild,
-  Signal,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,7 +26,7 @@ export interface Column {
 }
 
 // Base filter type
-interface ActiveFilter {
+export interface ActiveFilter {
   key: string;
   label: string;
   value: string;
@@ -49,12 +50,9 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   @ViewChild('searchInput', { read: ElementRef }) searchInputRef?: ElementRef<HTMLInputElement>;
   @ViewChild('valueInput', { read: ElementRef }) valueInputRef?: ElementRef<HTMLInputElement>;
 
-  private removeTokenContainer = false;
-  private allColumnsCache: Column[] = [];
-
-  @Input() columns?: Signal<Column[]>;
-
   @Input() visibleChipCount = 2;
+  preSelectedFilters = input<ActiveFilter[] | null>(null);
+  columns = input.required<Column[]>(); // Signal<Column[]>;
   @Input() dynamicValuesProvider?: (colKey: string, searchTerm: string) => string[] | Promise<string[]>;
 
   //Basid search change event emit
@@ -62,6 +60,9 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   //Advanced search change event emit
   @Output() filtersChange = new EventEmitter<ActiveFilter[]>();
+
+  //Not used now
+  initialized = signal(false);
 
   // Signals
   activeFilters = signal<ActiveFilter[]>([]);
@@ -76,6 +77,9 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   // Mouse events up/down and enter for dropdown
   highlightedIndex = signal(-1);
+
+  // Accept parent-provided initial mode
+  isAdvancedModeInput = input<boolean>(false);
 
   // Search mode change and capture the basic search string
   isAdvancedMode = signal(false);
@@ -120,7 +124,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   filteredColumns = computed(() => {
     const q = this.inputValue().toLowerCase();
     // use cached full list if available, else use latest input columns
-    const all = this.allColumnsCache.length ? this.allColumnsCache : this.columns?.() ?? [];
+    const all = this.columns?.() ?? [];
     const filters = this.activeFilters();
     const activeKeys = filters.map((f) => f.key);
 
@@ -179,11 +183,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   // --- Handlers ---
   onFocus() {
     this.highlightedIndex.set(-1);
-    if (!this.removeTokenContainer) {
-      this.showDropdown.set(true);
-    } else {
-      this.removeTokenContainer = false;
-    }
+    this.showDropdown.set(true);
   }
 
   onSearchInput(val: string) {
@@ -193,8 +193,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   }
 
   removeColumn() {
-    this.removeTokenContainer = true;
-    this.resetInput();
+    this.resetInput(true);
   }
 
   selectColumn(col: Column) {
@@ -260,8 +259,8 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     });
 
     this.filtersChange.emit(this.activeFilters());
-    this.resetInput();
-    setTimeout(() => this.searchInputRef?.nativeElement.focus());
+    this.resetInput(true);
+    //setTimeout(() => this.searchInputRef?.nativeElement.focus());
   }
 
   onRowClick(event: MouseEvent, col: Column, val: string) {
@@ -357,16 +356,16 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
     // Reset and close dropdown
     this.tempSelectedValues.set(new Map());
-    this.resetInput();
+    this.resetInput(true);
 
     // Refocus the main search input
-    setTimeout(() => this.searchInputRef?.nativeElement.focus());
+    //setTimeout(() => this.searchInputRef?.nativeElement.focus());
   }
 
   /** User clicks "Close" in multi-select mode (cancel) */
   cancelMultiSelection() {
     this.tempSelectedValues.set(new Map());
-    this.resetInput();
+    this.resetInput(true);
   }
 
   removeChip(key: string) {
@@ -387,14 +386,14 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   clearAll() {
     this.activeFilters.set([]);
     this.filtersChange.emit([]);
-    this.resetInput();
+    this.resetInput(true);
     this.moreDropdownOpen.set(false);
   }
 
-  resetInput() {
+  resetInput(keepDropdownClosed = false) {
     this.selectedColumn.set(null);
     this.inputValue.set('');
-    this.showDropdown.set(false);
+    this.showDropdown.set(!keepDropdownClosed && false);
     this.highlightedIndex.set(-1);
   }
 
@@ -422,6 +421,22 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   // Emit whenever filters change
   constructor(private elRef: ElementRef<HTMLElement>) {
+    //Todo: Use this, if the preselected filters are not emitted to the parent in the ngOnInit. Not used now
+    /* effect(() => {
+      const initial = this.preSelectedFilters();
+
+      // Run only once when valid filters arrive
+      if (!this.initialized && initial && initial.length > 0) {
+        this.activeFilters.set([...initial]);
+        this.initialized = true;
+      }
+    }); */
+
+    // Sync input to local state (runs whenever parent updates)
+    effect(() => {
+      this.isAdvancedMode.set(this.isAdvancedModeInput());
+    });
+
     // reactive emit for non-multi filters only
     computed(() => {
       const col = this.selectedColumn();
@@ -432,11 +447,21 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     document.addEventListener('click', this.onDocumentClick, true);
-    if (this.columns) {
-      const cols = this.columns();
-      if (cols && !this.allColumnsCache.length) {
-        this.allColumnsCache = [...cols];
+    console.log('advanced mode', this.isAdvancedModeInput());
+    if (this.isAdvancedModeInput()) {
+      const initial = this.preSelectedFilters();
+      if (initial?.length && !this.activeFilters().length) {
+        this.activeFilters.set([...initial]);
       }
+    } else {
+      this.activeFilters.set([]);
+      this.filtersChange.emit([]);
+    }
+  }
+
+  ngAfterViewInit() {
+    if (this.activeFilters().length) {
+      this.filtersChange.emit(this.activeFilters());
     }
   }
 

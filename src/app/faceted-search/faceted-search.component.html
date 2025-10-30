@@ -21,7 +21,7 @@
 
   <!-- Advanced Mode search -->
   <div *ngIf="isAdvancedMode()" class="search-box">
-    <div class="input-wrapper" (click)="onFocus()">
+    <div class="input-wrapper">
       <!-- Selected column token + input -->
       <ng-container *ngIf="selectedColumn() as col">
         <span class="token">
