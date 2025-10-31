@@ -1,9 +1,16 @@
-# angular-faceted-search
+# Angular-Faceted-Search
 
 ## Overview
 
-**angular-faceted-search** refers to a faceted search UI pattern implemented in Angular, allowing users to filter data using multiple categories or attributes—like brand, price, rating, etc.—commonly seen in e-commerce and data-heavy applications.
+**Angular Faceted Search** refers to a faceted search UI pattern implemented in Angular, allowing users to filter data using multiple categories or attributes—like brand, price, rating, etc.—commonly seen in e-commerce and data-heavy applications.
 
+## What is Faceted Search?
+Faceted search lets users narrow down results by applying multiple filters across different dimensions. For example:
+- Category: Electronics, Clothing, Books
+- Brand: Apple, Samsung, Sony
+- Price Range: ₹0–₹5,000, ₹5,000–₹10,000
+- Ratings: 4 stars & up, 3 stars & up
+This pattern improves usability and precision in search-heavy interfaces.
 
 ## Getting Started
 
@@ -14,6 +21,7 @@ Before you begin, ensure you have the following installed on your system:
 - **Node.js** (LTS version recommended) – v22.9.0
 - **npm** (comes with Node.js) - v11.1.0
 - **Angular CLI** – Install globally using:
+
   ```bash
   npm install -g @angular/cli
   ```
@@ -26,23 +34,21 @@ Clone the repo:
 
 ```bash
 git clone git@github.com:sakthivelreth/angular-faceted-search.git
-cd <angular-faceted-search>
+cd angular-faceted-search
 ```
 
 Install dependencies:
 
 ```bash
-npm i --legacy-peer-deps
+npm install
 ```
 
-\_Note: the legacy-peer-deps flag is required due to the IDS dependency.
+### Running Angular Faceted Search application
 
-### Running angular-faceted-search application
-
-To run mgui-kit application
+To run angular faceted search application
 
 ```bash
-npx npm run start
+npm run start
 ```
 
 This will serve angular faceted search app on `localhost:4200` by default.
