@@ -148,44 +148,8 @@
   background-color: #e6e6e6;
 }
 
-.clear-all {
-  font-size: 14px;
-  margin-right: 8px;
-}
-
-.clear-all a {
-  text-decoration: underline;
-  cursor: pointer;
-  color: #007bff;
-}
-
-.more-wrapper {
-  position: relative;
-}
-
-.more-text {
-  cursor: pointer;
-  color: #007bff;
-  font-size: 14px;
-}
-
 .more-text:hover {
   text-decoration: underline;
-}
-
-.more-dropdown {
-  position: absolute;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 4px 0;
-  margin-top: 4px;
-  list-style: none;
-  z-index: 10;
-  max-height: 200px;
-  width: 180px; /* adjust width as needed */
-  top: calc(100% + 4px);  /* below the +More link */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .more-dropdown li {
@@ -352,4 +316,70 @@
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
+}
+
+.chips-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 8px;
+  width: 100%;
+  position: relative;
+}
+
+.chips-side {
+  flex: 0 0 auto;
+  width: 70px; /* reserve space */
+  text-align: center;
+}
+
+.chips-side.left {
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+.chips-side.left a {
+  text-decoration: underline;
+  cursor: pointer;
+  color: #007bff;
+}
+
+.chips-side.hidden {
+  visibility: hidden;
+}
+
+.chips-middle {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chips-middle .chip {
+  flex-shrink: 0;
+}
+
+.more-text {
+  cursor: pointer;
+  color: #007bff;
+  font-size: 14px;
+}
+
+.more-dropdown {
+  position: absolute;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 0;
+  margin-top: 4px;
+  list-style: none;
+  z-index: 10;
+  max-height: 200px;
+  width: 180px; /* adjust width as needed */
+  top: calc(100% + 4px);  /* below the +More link */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }

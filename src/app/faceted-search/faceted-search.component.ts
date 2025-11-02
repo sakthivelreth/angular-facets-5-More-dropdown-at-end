@@ -54,6 +54,7 @@ interface GroupedFilter {
 export class FacetFilterComponent implements OnInit, OnDestroy {
   @ViewChild('searchInput', { read: ElementRef }) searchInputRef?: ElementRef<HTMLInputElement>;
   @ViewChild('valueInput', { read: ElementRef }) valueInputRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('chipsMiddle', { static: false }) chipsMiddleRef?: ElementRef<HTMLDivElement>;
 
   @Input() visibleChipCount = 2;
   preSelectedFilters = input<ActiveFilter[] | null>(null);
@@ -90,6 +91,12 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   isAdvancedMode = signal(false);
   basicSearchText = signal('');
 
+  // dynamic signals for visible vs hidden chips
+  visibleGroups = signal<GroupedFilter[]>([]);
+  hiddenGroups = signal<GroupedFilter[]>([]);
+
+  private resizeObserver?: ResizeObserver;
+
   // Computeds
   hasFilters = computed(() => this.activeFilters().length > 0);
 
@@ -106,17 +113,6 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     }
 
     return Array.from(map.values());
-  });
-
-  // last/more groups for UI (derived from groupedFilters)
-  lastVisibleGroups = computed(() => {
-    const groups = this.groupedFilters();
-    return groups.slice(-this.visibleChipCount);
-  });
-
-  moreGroups = computed(() => {
-    const groups = this.groupedFilters();
-    return groups.slice(0, -this.visibleChipCount);
   });
 
   // A map for quick lookup of selected values per column (used by checkbox checked binding)
@@ -486,6 +482,12 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
       this.isAdvancedMode.set(this.isAdvancedModeInput());
     });
 
+    // watch for chip or filter changes
+    effect(() => {
+      this.groupedFilters();
+      queueMicrotask(() => this.calculateVisibleChips());
+    });
+
     // reactive emit for non-multi filters only
     computed(() => {
       const col = this.selectedColumn();
@@ -511,10 +513,69 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     if (this.activeFilters().length) {
       this.filtersChange.emit(this.activeFilters());
     }
+
+    // run initial calc after view ready
+    this.calculateVisibleChips();
+
+    // watch resize
+    this.resizeObserver = new ResizeObserver(() => {
+      this.calculateVisibleChips();
+    });
+    this.resizeObserver.observe(this.elRef.nativeElement);
   }
 
   ngOnDestroy() {
     document.removeEventListener('click', this.onDocumentClick, true);
+  }
+
+  private calculateVisibleChips() {
+    const container = this.chipsMiddleRef?.nativeElement;
+    if (!container) return;
+
+    const allGroups = this.groupedFilters();
+    if (!allGroups.length) {
+      this.visibleGroups.set([]);
+      this.hiddenGroups.set([]);
+      return;
+    }
+
+    // reset all chips
+    this.visibleGroups.set(allGroups);
+    this.hiddenGroups.set([]);
+
+    // Measure total width
+    const availableWidth = container.clientWidth;
+    let total = 0;
+    const visible: GroupedFilter[] = [];
+    const hidden: GroupedFilter[] = [];
+
+    // create temp elements for width measurement
+    const tempContainer = document.createElement('div');
+    tempContainer.style.visibility = 'hidden';
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.whiteSpace = 'nowrap';
+    document.body.appendChild(tempContainer);
+
+    for (let i = allGroups.length - 1; i >= 0; i--) {
+      const group = allGroups[i];
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerText = `${group.label}: ${group.values.join(', ')}`;
+      tempContainer.appendChild(chip);
+      const chipWidth = chip.offsetWidth + 8; // margin/gap
+
+      if (total + chipWidth < availableWidth - 60) {
+        // reserve ~60px for "+ More"
+        visible.unshift(group);
+        total += chipWidth;
+      } else {
+        hidden.unshift(group);
+      }
+    }
+    document.body.removeChild(tempContainer);
+
+    this.visibleGroups.set(visible);
+    this.hiddenGroups.set(hidden);
   }
 
   // Toggle logic for basic and advanced search switches
