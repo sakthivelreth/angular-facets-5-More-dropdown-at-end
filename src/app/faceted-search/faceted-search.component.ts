@@ -15,26 +15,31 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
+export interface ColumnValue {
+  key: string | number;
+  value: string;
+}
 export interface Column {
-  key: string;
   label: string;
+  map: string;
   type: 'text' | 'select';
-  values?: string[];
+  options?: ColumnValue[];
   preferred?: boolean;
   mutuallyExclusive?: string[];
   multi?: boolean;
+  translate?: boolean;
 }
 
 // Base filter type
 export interface ActiveFilter {
-  key: string;
+  map: string;
   label: string;
-  value: string;
+  values: ColumnValue[];
 }
 
 // Grouped filter type
 interface GroupedFilter {
-  key: string;
+  map: string;
   label: string;
   values: string[];
 }
@@ -91,12 +96,15 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   // groupedFilters: transforms activeFilters -> grouped by key with values array
   groupedFilters = computed<GroupedFilter[]>(() => {
     const map = new Map<string, GroupedFilter>();
+
     for (const f of this.activeFilters()) {
-      if (!map.has(f.key)) {
-        map.set(f.key, { key: f.key, label: f.label, values: [] });
+      if (!map.has(f.map)) {
+        map.set(f.map, { map: f.map, label: f.label, values: [] });
       }
-      map.get(f.key)!.values.push(f.value);
+      const group = map.get(f.map)!;
+      group.values.push(...f.values.map((v) => v.value));
     }
+
     return Array.from(map.values());
   });
 
@@ -115,8 +123,8 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   selectedValuesMap = computed(() => {
     const map = new Map<string, Set<string>>();
     for (const f of this.activeFilters()) {
-      if (!map.has(f.key)) map.set(f.key, new Set());
-      map.get(f.key)!.add(f.value);
+      if (!map.has(f.map)) map.set(f.map, new Set());
+      f.values.forEach((v) => map.get(f.map)!.add(v.value));
     }
     return map;
   });
@@ -126,18 +134,18 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     // use cached full list if available, else use latest input columns
     const all = this.columns?.() ?? [];
     const filters = this.activeFilters();
-    const activeKeys = filters.map((f) => f.key);
+    const activeKeys = filters.map((f) => f.map);
 
     // build mutually excluded keys
     const mutuallyExcluded = new Set<string>();
     for (const f of filters) {
-      const col = all.find((c) => c.key === f.key);
+      const col = all.find((c) => c.map === f.map);
       col?.mutuallyExclusive?.forEach((k) => mutuallyExcluded.add(k));
     }
 
     // filter while preserving original order
     const filtered = all.filter(
-      (c) => !activeKeys.includes(c.key) && !mutuallyExcluded.has(c.key) && c.label.toLowerCase().includes(q)
+      (c) => !activeKeys.includes(c.map) && !mutuallyExcluded.has(c.map) && c.label.toLowerCase().includes(q)
     );
 
     // preferred first but keep their relative order
@@ -151,7 +159,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     const col = this.selectedColumn();
     if (!col) return this.inputValue(); // when no column selected → normal input text
     if (col.multi) {
-      const selected = Array.from(this.tempSelectedValues().get(col.key) ?? []);
+      const selected = Array.from(this.tempSelectedValues().get(col.map) ?? []);
       return selected.length
         ? `${selected.join(', ')}${this.inputValue() ? ', ' + this.inputValue() : ''}`
         : this.inputValue();
@@ -165,18 +173,41 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
     //if (!col) return []; //All the columns values will be auto populated
 
-    // If dynamicValuesProvider is provided, use it
-    if (this.dynamicValuesProvider) {
-      const result = this.dynamicValuesProvider(col.key, this.inputValue());
-      return Array.isArray(result) ? result : [];
-    }
-
     // fallback to static values for select columns
-    if (col.type === 'select' && col.values) {
+    if (col.type === 'select' && col.options && col.options.length > 0) {
       const q = this.inputValue().toLowerCase();
-      return col.values.filter((v) => v.toLowerCase().includes(q));
+      return col.options.filter((v) => v.value.toLowerCase().includes(q));
     }
 
+    if (col.type === 'select' && this.dynamicValuesProvider) {
+      const result = this.dynamicValuesProvider(col.map, this.inputValue());
+
+      let normalized: ColumnValue[] = [];
+
+      if (Array.isArray(result)) {
+        const first = result[0];
+
+        // Case 1: Array of strings
+        if (typeof first === 'string') {
+          normalized = result.map((v) => ({ key: v, value: v }));
+        }
+
+        // Case 2: Array of objects { key, value }. Currently this is not supported from the dynamicValuesProvider
+        if (first && typeof first === 'object' && 'key' in first && 'value' in first) {
+          normalized = result as unknown as ColumnValue[];
+        }
+
+        // Update column values so rest of component uses latest list
+        col.options = normalized;
+
+        // Return the normalized list
+        return normalized;
+      }
+
+      return [];
+    }
+
+    // Fallback
     return [];
   });
 
@@ -204,9 +235,9 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
     // Initialize temp selections for multi-select
     if (col.multi) {
-      const activeSet = this.selectedValuesMap().get(col.key) ?? new Set<string>();
+      const activeSet = this.selectedValuesMap().get(col.map) ?? new Set<string>();
       const temp = new Map(this.tempSelectedValues());
-      temp.set(col.key, new Set([...activeSet]));
+      temp.set(col.map, new Set([...activeSet]));
       this.tempSelectedValues.set(temp);
     }
 
@@ -248,14 +279,22 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     }
   }
 
-  selectValue(val: string) {
+  selectValue(val: ColumnValue) {
     const col = this.selectedColumn();
     if (!col) return;
 
     this.activeFilters.update((filters) => {
       const existing = [...filters];
-      const others = existing.filter((f) => f.key !== col.key);
-      return [...others, { key: col.key, label: col.label, value: val }];
+      const others = existing.filter((f) => f.map !== col.map);
+
+      return [
+        ...others,
+        {
+          map: col.map,
+          label: col.label,
+          values: [{ key: val.key, value: val.value }],
+        },
+      ] as ActiveFilter[];
     });
 
     this.filtersChange.emit(this.activeFilters());
@@ -263,7 +302,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     //setTimeout(() => this.searchInputRef?.nativeElement.focus());
   }
 
-  onRowClick(event: MouseEvent, col: Column, val: string) {
+  onRowClick(event: MouseEvent, col: Column, val: ColumnValue) {
     event.stopPropagation();
     if (col.multi) {
       // Prevent double toggle when clicking directly on the checkbox
@@ -276,17 +315,18 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     }
   }
 
-  onCheckboxClick(event: MouseEvent, col: Column, val: string) {
+  onCheckboxClick(event: MouseEvent, col: Column, val: ColumnValue) {
     event.stopPropagation(); // Prevent li click
     this.toggleValue(col, val); // Use Angular state to toggle
   }
 
-  toggleValue(col: Column, match: string) {
+  toggleValue(col: Column, val: ColumnValue) {
     if (!col.multi) return;
     const temp = new Map(this.tempSelectedValues());
-    const set = new Set(temp.get(col.key) ?? []);
+    const set = new Set(temp.get(col.map) ?? []);
+    const match = val.value;
     set.has(match) ? set.delete(match) : set.add(match);
-    temp.set(col.key, set);
+    temp.set(col.map, set);
     this.tempSelectedValues.set(temp);
     this.inputValue.set('');
   }
@@ -301,14 +341,14 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
         event.preventDefault();
         const val = this.inputValue().trim();
         if (val) {
-          this.selectValue(val);
+          this.selectValue({ key: val, value: val });
         }
       }
       return; // stop here — no dropdown navigation
     }
 
     // --- Case 2: Select (dropdown-based) ---
-    const list: string[] = this.possibleValues();
+    const list: ColumnValue[] = this.possibleValues();
     const lastIndex = list.length - 1;
 
     switch (event.key) {
@@ -343,11 +383,20 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     if (!col) return;
 
     const temp = this.tempSelectedValues();
-    const selectedValues = temp.get(col.key) ?? new Set<string>();
+    const selectedValues = temp.get(col.map) ?? new Set<string>();
 
-    const newFilters = this.activeFilters()
-      .filter((f) => f.key !== col.key)
-      .concat([...selectedValues].map((v) => ({ key: col.key, label: col.label, value: v })));
+    // find corresponding ColumnValue objects for selectedValues
+    const matchedValues = col.options?.filter((v) => selectedValues.has(v.value)) ?? [];
+
+    const newFilters: ActiveFilter[] = this.activeFilters()
+      .filter((f) => f.map !== col.map)
+      .concat([
+        {
+          map: col.map,
+          label: col.label,
+          values: matchedValues.map((v) => ({ key: v.key, value: v.value })),
+        },
+      ]);
 
     this.activeFilters.set(newFilters);
 
@@ -359,7 +408,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     this.resetInput(true);
 
     // Refocus the main search input
-    //setTimeout(() => this.searchInputRef?.nativeElement.focus());
+    // setTimeout(() => this.searchInputRef?.nativeElement.focus());
   }
 
   /** User clicks "Close" in multi-select mode (cancel) */
@@ -370,7 +419,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   removeChip(key: string) {
     this.activeFilters.update((filters) => {
-      const updated = filters.filter((f) => f.key !== key);
+      const updated = filters.filter((f) => f.map !== key);
 
       // Emit updated filters to parent
       this.filtersChange.emit(updated);
@@ -447,7 +496,6 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     document.addEventListener('click', this.onDocumentClick, true);
-    console.log('advanced mode', this.isAdvancedModeInput());
     if (this.isAdvancedModeInput()) {
       const initial = this.preSelectedFilters();
       if (initial?.length && !this.activeFilters().length) {

@@ -17,8 +17,8 @@ export class AppComponent implements OnInit {
 
   //Show the preselected filters with chips and filtered table
   preSelectedFilters = [
-    { key: 'status', label: 'Status', value: 'Active' },
-    { key: 'location', label: 'Location', value: 'Zone A' },
+    { map: 'status', label: 'Status', values: [{ key: 'active', value: 'Active' }] },
+    { map: 'location', label: 'Location', values: [{ key: 'zone-a', value: 'Zone A' }] },
   ];
 
   data = signal<any[]>([]);
@@ -37,42 +37,62 @@ export class AppComponent implements OnInit {
     setTimeout(() => {
       const allColumns: Column[] = [
         {
-          key: 'enclosure',
           label: 'Enclosure',
+          map: 'enclosure',
           type: 'select',
-          values: ['BP_PSV_0_1', 'BP_PSV_0_2', 'BP_TNK_1', 'BP_TNK_2', 'BP_PMP_3', 'BP_VALVE_4'],
+          options: [
+            { key: 1, value: 'BP_PSV_0_1' },
+            { key: 2, value: 'BP_PSV_0_2' },
+            { key: 3, value: 'BP_TNK_1' },
+            { key: 4, value: 'BP_TNK_2' },
+            { key: 5, value: 'BP_PMP_3' },
+            { key: 6, value: 'BP_VALVE_4' },
+          ],
           preferred: false,
           mutuallyExclusive: ['status', 'location'],
+          translate: true,
         },
         {
-          key: 'status',
           label: 'Status',
+          map: 'status',
           type: 'select',
-          values: ['Active', 'Inactive', 'Maintenance', 'Decommissioned'],
+          options: [
+            { key: 1, value: 'Active' },
+            { key: 2, value: 'Inactive' },
+            { key: 3, value: 'Maintenance' },
+            { key: 4, value: 'Decommissioned' },
+          ],
           preferred: true,
           mutuallyExclusive: ['enclosure', 'location'],
           multi: true,
+          translate: true,
         },
-        { key: 'description', label: 'Description', type: 'text', preferred: false },
+        { label: 'Description', map: 'description', type: 'text', preferred: false, translate: true },
         {
-          key: 'location',
           label: 'Location',
+          map: 'location',
           type: 'select',
-          values: [],
           preferred: true,
           multi: true,
           mutuallyExclusive: ['status'],
+          translate: true,
         },
-        { key: 'lastUpdated', label: 'Last Updated', type: 'text', preferred: false },
+        { label: 'Last Updated', map: 'lastUpdated', type: 'text', preferred: false, translate: true },
         {
-          key: 'operator',
           label: 'Operator',
+          map: 'operator',
           type: 'select',
-          values: ['Alice', 'Bob', 'Charlie', 'Diana'],
+          options: [
+            { key: 1, value: 'Alice' },
+            { key: 2, value: 'Bob' },
+            { key: 3, value: 'Charlie' },
+            { key: 4, value: 'Diana' },
+          ],
           preferred: true,
           multi: true,
+          translate: true,
         },
-        { key: 'temperature', label: 'Temperature (°C)', type: 'text', preferred: false },
+        { label: 'Temperature (°C)', map: 'temperature', type: 'text', preferred: false, translate: true },
       ];
 
       this.columns = allColumns;
@@ -181,11 +201,11 @@ export class AppComponent implements OnInit {
     const remaining: Column[] = [];
 
     this.preferredKeys.forEach((key) => {
-      const match = cols.find((c) => c.key === key);
+      const match = cols.find((c) => c.map === key);
       if (match) preferred.push(match);
     });
 
-    remaining.push(...cols.filter((c) => !this.preferredKeys.includes(c.key)));
+    remaining.push(...cols.filter((c) => !this.preferredKeys.includes(c.map)));
 
     return [...preferred, ...remaining];
   }
@@ -201,15 +221,18 @@ export class AppComponent implements OnInit {
       return this.data().filter((row) => Object.values(row).some((v) => v?.toString().toLowerCase().includes(search)));
     }
 
+    //For advanced search
     const filters = this.activeFilters();
     const grouped = filters.reduce((map, f) => {
-      (map[f.key] ??= []).push(f.value.toLowerCase());
+      for (const v of f.values) {
+        (map[f.map] ??= []).push(v.value.toLowerCase());
+      }
       return map;
     }, {} as Record<string, string[]>);
 
     return this.data().filter((row) =>
       Object.entries(grouped).every(([key, values]) => {
-        const col = this.columns.find((c) => c.key === key);
+        const col = this.columns.find((c) => c.map === key);
         const cellValue = (row as any)[key]?.toString().toLowerCase();
         if (!cellValue) return false;
 

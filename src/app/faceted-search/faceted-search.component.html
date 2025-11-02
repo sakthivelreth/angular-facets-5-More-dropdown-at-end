@@ -51,10 +51,10 @@
                   <input
                     *ngIf="col?.multi"
                     type="checkbox"
-                    [checked]="tempSelectedValues().get(col.key)?.has(val)"
+                    [checked]="tempSelectedValues().get(col.map)?.has(val.value)"
                     (click)="onCheckboxClick($event, col, val)"
                   />
-                  <span (click)="onRowClick($event, col, val)" [innerHTML]="highlightMatch(val)"></span>
+                  <span (click)="onRowClick($event, col, val)" [innerHTML]="highlightMatch(val.value)"></span>
                 </div>
               </li>
 
@@ -108,7 +108,7 @@
         <span class="chip" [title]="group.label + ': ' + (group.values.join(', ') || '')">
           <span class="chip-label">{{ group.label }}:</span>
           <span class="chip-value">{{ group.values.join(', ') }}</span>
-          <button (click)="removeChip(group.key)">×</button>
+          <button (click)="removeChip(group.map)">×</button>
         </span>
       </ng-container>
 
@@ -121,7 +121,7 @@
               <span class="chip" [title]="group.label + ': ' + group.values.join(', ')">
                 <span class="chip-label">{{ group.label }}:</span>
                 <span class="chip-value">{{ group.values.join(', ') }}</span>
-                <button (click)="removeChip(group.key)">×</button>
+                <button (click)="removeChip(group.map)">×</button>
               </span>
             </li>
           </ul>
