@@ -56,7 +56,6 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   @ViewChild('valueInput', { read: ElementRef }) valueInputRef?: ElementRef<HTMLInputElement>;
   @ViewChild('chipsMiddle', { static: false }) chipsMiddleRef?: ElementRef<HTMLDivElement>;
 
-  @Input() visibleChipCount = 2;
   preSelectedFilters = input<ActiveFilter[] | null>(null);
   @Input() chipsContainerWidth: string = '80%';
 
