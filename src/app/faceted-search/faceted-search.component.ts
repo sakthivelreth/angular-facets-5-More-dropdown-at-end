@@ -58,6 +58,8 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   @Input() visibleChipCount = 2;
   preSelectedFilters = input<ActiveFilter[] | null>(null);
+  @Input() chipsContainerWidth: string = '80%';
+
   columns = input.required<Column[]>(); // Signal<Column[]>;
   @Input() dynamicValuesProvider?: (colKey: string, searchTerm: string) => string[] | Promise<string[]>;
 

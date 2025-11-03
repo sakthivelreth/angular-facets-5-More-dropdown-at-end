@@ -1,24 +1,27 @@
-<mgui-facet-filter
-  [isAdvancedModeInput]="false"
-  [visibleChipCount]="3"
-  [preSelectedFilters]="preSelectedFilters"
-  [columns]="columns"
-  [dynamicValuesProvider]="getColumnValues.bind(this)"
-  (filtersChange)="activeFilters.set($event)"
-  (basicSearchChange)="onBasicSearch($event)"
-></mgui-facet-filter>
+<div class="container">
+  <mgui-facet-filter
+    [isAdvancedModeInput]="false"
+    [chipsContainerWidth]="'600px'"
+    [visibleChipCount]="3"
+    [preSelectedFilters]="preSelectedFilters"
+    [columns]="columns"
+    [dynamicValuesProvider]="getColumnValues.bind(this)"
+    (filtersChange)="activeFilters.set($event)"
+    (basicSearchChange)="onBasicSearch($event)"
+  ></mgui-facet-filter>
 
-<table>
-  <thead>
-    <tr>
-      <th *ngFor="let col of columns">{{ col.label }}</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let row of filteredData()">
-      <td *ngFor="let col of columns">
-        {{ $any(row)[col.map] || '' }}
-      </td>
-    </tr>
-  </tbody>
-</table>
+  <table class="bordered-table">
+    <thead>
+      <tr>
+        <th *ngFor="let col of columns">{{ col.label }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of filteredData()">
+        <td *ngFor="let col of columns">
+          {{ $any(row)[col.map] || '' }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

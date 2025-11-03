@@ -5,3 +5,30 @@ td {
   padding: 6px;
   text-align: left;
 }
+
+/*
+* Copyright © Dell Inc. or its subsidiaries. All Rights Reserved.
+*/
+.container {
+  padding: 10px 15px;
+}
+
+.bordered-table {
+  margin-top: 20px;
+  border: 1px solid black;
+  border-collapse: collapse;
+  width: 100%; /* make the table take up the full width of its container */
+  background-color: white;
+}
+
+.bordered-table th,
+.bordered-table td {
+  border: 1px solid black;
+  padding: 10px; /* add padding within the cells */
+  text-align: center; /* optional: center the text within the cells */
+}
+
+.bordered-table th {
+  min-width: 150px; /* set a minimum width for each column */
+  width: auto; /* make the columns automatically adjust their width */
+}

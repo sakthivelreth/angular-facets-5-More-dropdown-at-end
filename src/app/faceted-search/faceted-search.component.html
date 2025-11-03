@@ -96,38 +96,47 @@
         <span [innerHTML]="highlightMatch(col.label)"></span>
       </li>
     </ul>
+  </div>
+</div>
 
-    <!-- Chips -->
-    <div class="chips-container">
-      <!-- Left: Clear All -->
-      <div class="chips-side left" [class.hidden]="!hasFilters()">
-        <a href="#" (click)="clearAll()">Clear All</a>
-      </div>
+<!-- Chips container moved OUTSIDE facet-container -->
+<div
+  class="chips-bar"
+  *ngIf="isAdvancedMode() && hasFilters()"
+  [ngStyle]="{
+    width: chipsContainerWidth,
+    marginLeft: 'auto'
+  }"
+>
+  <div class="chips-container">
+    <!-- Left: Clear All -->
+    <div class="chips-side left" [class.hidden]="!hasFilters()">
+      <a href="#" (click)="clearAll()">Clear All</a>
+    </div>
 
-      <!-- Middle: dynamic chip list -->
-      <div #chipsMiddle class="chips-middle">
-        <ng-container *ngFor="let group of visibleGroups()">
-          <span class="chip" [title]="group.label + ': ' + (group.values.join(', ') || '')">
+    <!-- Middle: dynamic chip list -->
+    <div #chipsMiddle class="chips-middle">
+      <ng-container *ngFor="let group of visibleGroups()">
+        <span class="chip" [title]="group.label + ': ' + (group.values.join(', ') || '')">
+          <span class="chip-label">{{ group.label }}:</span>
+          <span class="chip-value">{{ group.values.join(', ') }}</span>
+          <button (click)="removeChip(group.map)">×</button>
+        </span>
+      </ng-container>
+    </div>
+
+    <!-- Right: More -->
+    <div class="chips-side right" [class.hidden]="!hiddenGroups().length">
+      <span class="more-text" (click)="toggleMoreDropdown()">+ More</span>
+      <ul *ngIf="moreDropdownOpen()" class="more-dropdown">
+        <li *ngFor="let group of hiddenGroups()">
+          <span class="chip" [title]="group.label + ': ' + group.values.join(', ')">
             <span class="chip-label">{{ group.label }}:</span>
             <span class="chip-value">{{ group.values.join(', ') }}</span>
             <button (click)="removeChip(group.map)">×</button>
           </span>
-        </ng-container>
-      </div>
-
-      <!-- Right: More -->
-      <div class="chips-side right" [class.hidden]="!hiddenGroups().length">
-        <span class="more-text" (click)="toggleMoreDropdown()">+ More</span>
-        <ul *ngIf="moreDropdownOpen()" class="more-dropdown">
-          <li *ngFor="let group of hiddenGroups()">
-            <span class="chip" [title]="group.label + ': ' + group.values.join(', ')">
-              <span class="chip-label">{{ group.label }}:</span>
-              <span class="chip-value">{{ group.values.join(', ') }}</span>
-              <button (click)="removeChip(group.map)">×</button>
-            </span>
-          </li>
-        </ul>
-      </div>
+        </li>
+      </ul>
     </div>
   </div>
 </div>
