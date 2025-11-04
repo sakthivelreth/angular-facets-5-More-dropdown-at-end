@@ -461,9 +461,10 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   private readonly onDocumentClick = (event: MouseEvent) => {
     const target = event.target as Node;
     const clickedInsideFacet = this.elRef.nativeElement.querySelector('.facet-container')?.contains(target);
+    const clickedInsideMoreDropdown = this.elRef.nativeElement.querySelector('.more-dropdown')?.contains(target);
 
-    // If clicked inside search or dropdown → keep open
-    if (clickedInsideFacet) return;
+    // If clicked inside search or dropdown or more dropdown → keep open
+    if (clickedInsideFacet || clickedInsideMoreDropdown) return;
 
     // If clicked anywhere else outside → close
     this.showDropdown.set(false);
