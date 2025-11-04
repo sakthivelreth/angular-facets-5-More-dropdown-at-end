@@ -35,6 +35,7 @@
               [value]="inputValue()"
               (input)="onSearchInput($any($event.target).value)"
               (keydown)="onValueKeydown($event)"
+              (focus)="onFocus()"
               (keydown.backspace)="$event.stopPropagation()"
             />
 

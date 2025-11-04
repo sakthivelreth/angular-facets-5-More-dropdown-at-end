@@ -459,10 +459,15 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   }
 
   private readonly onDocumentClick = (event: MouseEvent) => {
-    if (!this.elRef.nativeElement.contains(event.target as Node)) {
-      this.showDropdown.set(false);
-      this.moreDropdownOpen.set(false);
-    }
+    const target = event.target as Node;
+    const clickedInsideFacet = this.elRef.nativeElement.querySelector('.facet-container')?.contains(target);
+
+    // If clicked inside search or dropdown → keep open
+    if (clickedInsideFacet) return;
+
+    // If clicked anywhere else outside → close
+    this.showDropdown.set(false);
+    this.moreDropdownOpen.set(false);
   };
 
   // Emit whenever filters change
@@ -499,6 +504,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     document.addEventListener('click', this.onDocumentClick, true);
+
     if (this.isAdvancedModeInput()) {
       const initial = this.preSelectedFilters();
       if (initial?.length && !this.activeFilters().length) {
