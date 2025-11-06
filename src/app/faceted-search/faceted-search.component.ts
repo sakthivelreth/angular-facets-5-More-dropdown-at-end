@@ -570,10 +570,15 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
       tempContainer.appendChild(chip);
       const chipWidth = chip.offsetWidth + 8; // margin/gap
 
-      if (total + chipWidth < availableWidth - 60) {
+      // Limiting max width to 150px for every chips
+      if (chipWidth < 150) {
+        total += chipWidth;
+      } else {
+        total = total + 150;
+      }
+      if (total < availableWidth - 60) {
         // reserve ~60px for "+ More"
         visible.unshift(group);
-        total += chipWidth;
       } else {
         hidden.unshift(group);
       }
