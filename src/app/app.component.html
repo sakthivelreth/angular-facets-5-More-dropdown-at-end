@@ -1,13 +1,23 @@
 <div class="container">
   <mgui-facet-filter
     [isAdvancedModeInput]="true"
-    [chipsContainerWidth]="'600px'"
+    [chipsContainerWidth]="'100%'"
     [preSelectedFilters]="preSelectedFilters"
     [columns]="columns"
     [dynamicValuesProvider]="getColumnValues.bind(this)"
     (filtersChange)="activeFilters.set($event)"
     (basicSearchChange)="onBasicSearch($event)"
+    (searchTemplate)="searchTpl = $event"
+    (pillsTemplate)="pillsTpl = $event"
   ></mgui-facet-filter>
+
+  <div class="search-container facet-projected" (mousedown)="$event.stopPropagation()">
+    <ng-container *ngTemplateOutlet="searchTpl"></ng-container>
+  </div>
+
+  <div class="pills-container facet-projected" (mousedown)="$event.stopPropagation()">
+    <ng-container *ngTemplateOutlet="pillsTpl"></ng-container>
+  </div>
 
   <table class="bordered-table">
     <thead>

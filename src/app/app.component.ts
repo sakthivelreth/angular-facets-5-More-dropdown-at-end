@@ -1,5 +1,5 @@
-import { Component, signal, computed, OnInit } from '@angular/core';
-import { NgFor } from '@angular/common';
+import { Component, signal, computed, OnInit, TemplateRef } from '@angular/core';
+import { NgFor, NgTemplateOutlet } from '@angular/common';
 import { FacetFilterComponent, Column, ActiveFilter } from './faceted-search/faceted-search.component';
 
 @Component({
@@ -7,9 +7,11 @@ import { FacetFilterComponent, Column, ActiveFilter } from './faceted-search/fac
   standalone: true,
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  imports: [NgFor, FacetFilterComponent],
+  imports: [NgFor, NgTemplateOutlet, FacetFilterComponent]
 })
 export class AppComponent implements OnInit {
+  searchTpl!: TemplateRef<any>;
+  pillsTpl!: TemplateRef<any>;
   columns: Column[] = [];
 
   basicSearch = signal('');
@@ -18,7 +20,7 @@ export class AppComponent implements OnInit {
   //Show the preselected filters with chips and filtered table
   preSelectedFilters = [
     { map: 'status', label: 'Status', values: [{ key: 'active', value: 'Active' }] },
-    { map: 'location', label: 'Location', values: [{ key: 'zone-a', value: 'Zone A' }] },
+    { map: 'location', label: 'Location', values: [{ key: 'zone-a', value: 'Zone A' }] }
   ];
 
   data = signal<any[]>([]);
@@ -41,41 +43,63 @@ export class AppComponent implements OnInit {
           map: 'enclosure',
           type: 'select',
           options: [
-            { key: 1, value: 'BP_PSV_0_1' },
-            { key: 2, value: 'BP_PSV_0_2' },
+            { key: 1, value: 'BP_PSV_0_1 Embedded controller in Slot 1' },
+            { key: 2, value: 'BP_PSV_0_2 Extended controller in Slot 2' },
             { key: 3, value: 'BP_TNK_1' },
-            { key: 4, value: 'BP_TNK_2' },
+            { key: 4, value: 'BP_TNK_2 Embedded controller in Slot 2' },
             { key: 5, value: 'BP_PMP_3' },
-            { key: 6, value: 'BP_VALVE_4' },
+            { key: 6, value: 'BP_VALVE_4' }
           ],
           preferred: false,
           mutuallyExclusive: ['status', 'location'],
-          translate: true,
+          translate: true
         },
         {
-          label: 'Status',
-          map: 'status',
+          label: 'Type',
+          map: 'type',
           type: 'select',
           options: [
-            { key: 1, value: 'Active' },
-            { key: 2, value: 'Inactive' },
-            { key: 3, value: 'Maintenance' },
-            { key: 4, value: 'Decommissioned' },
+            { key: 1, value: 'Embedded' },
+            { key: 2, value: 'Integrated' }
           ],
-          preferred: true,
-          mutuallyExclusive: ['enclosure', 'location'],
           multi: true,
-          translate: true,
+          translate: true
+        },
+        {
+          label: 'Split Mode Capable',
+          map: 'capable',
+          type: 'select',
+          options: [
+            { key: 1, value: 'Capable' },
+            { key: 2, value: 'Not-Capable' }
+          ],
+          multi: true,
+          translate: true
+        },
+        {
+          label: 'PCI Express Generation',
+          map: 'PCIeGen',
+          type: 'select',
+          options: [
+            { key: 1, value: 'Gen 3' },
+            { key: 2, value: 'Gen 4' },
+            { key: 3, value: 'Gen 5' },
+            { key: 4, value: 'Gen 6' }
+          ],
+          multi: true,
+          translate: true
         },
         { label: 'Description', map: 'description', type: 'text', preferred: false, translate: true },
         {
           label: 'Location',
           map: 'location',
           type: 'select',
-          preferred: true,
           multi: true,
-          mutuallyExclusive: ['status'],
-          translate: true,
+          options: [
+            { key: 1, value: 'Front' },
+            { key: 2, value: 'Back' }
+          ],
+          translate: true
         },
         { label: 'Last Updated', map: 'lastUpdated', type: 'text', preferred: false, translate: true },
         {
@@ -86,13 +110,13 @@ export class AppComponent implements OnInit {
             { key: 1, value: 'Alice' },
             { key: 2, value: 'Bob' },
             { key: 3, value: 'Charlie' },
-            { key: 4, value: 'Diana' },
+            { key: 4, value: 'Diana' }
           ],
           preferred: true,
           multi: true,
-          translate: true,
+          translate: true
         },
-        { label: 'Temperature (°C)', map: 'temperature', type: 'text', preferred: false, translate: true },
+        { label: 'Temperature (°C)', map: 'temperature', type: 'text', preferred: false, translate: true }
       ];
 
       this.columns = allColumns;
@@ -105,92 +129,122 @@ export class AppComponent implements OnInit {
         enclosure: 'BP_PSV_0_1',
         status: 'Active',
         description: 'Unit 1',
-        location: 'Zone A',
         lastUpdated: '2025-10-20',
         operator: 'Alice',
         temperature: '75',
+        type: 'Embedded',
+        capable: 'Capable',
+        PCIeGen: 'Gen 3',
+        location: 'Front'
       },
       {
         enclosure: 'BP_PSV_0_2',
         status: 'Inactive',
         description: 'Unit 2',
-        location: 'Zone B',
         lastUpdated: '2025-10-18',
         operator: 'Bob',
         temperature: '68',
+        type: 'Integrated',
+        capable: 'Not Capable',
+        PCIeGen: 'Gen 4',
+        location: 'Back'
       },
       {
         enclosure: 'BP_TNK_1',
         status: 'Active',
         description: 'Tank 1',
-        location: 'Zone C',
         lastUpdated: '2025-10-22',
         operator: 'Charlie',
         temperature: '82',
+        type: 'Embedded',
+        capable: 'Capable',
+        PCIeGen: 'Gen 5',
+        location: 'Front'
       },
       {
         enclosure: 'BP_TNK_2',
         status: 'Maintenance',
         description: 'Tank 2 under inspection',
-        location: 'Zone D',
         lastUpdated: '2025-10-19',
         operator: 'Diana',
         temperature: '60',
+        type: 'Integrated',
+        capable: 'Not Capable',
+        PCIeGen: 'Gen 6',
+        location: 'Back'
       },
       {
         enclosure: 'BP_PMP_3',
         status: 'Active',
         description: 'Pump 3 operational',
-        location: 'Zone A',
         lastUpdated: '2025-10-21',
         operator: 'Alice',
         temperature: '77',
+        type: 'Embedded',
+        capable: 'Capable',
+        PCIeGen: 'Gen 3',
+        location: 'Front'
       },
       {
         enclosure: 'BP_VALVE_4',
         status: 'Decommissioned',
         description: 'Valve 4 retired',
-        location: 'Zone B',
         lastUpdated: '2025-10-15',
         operator: 'Bob',
         temperature: 'N/A',
+        type: 'Integrated',
+        capable: 'Not Capable',
+        PCIeGen: 'Gen 4',
+        location: 'Back'
       },
       {
         enclosure: 'BP_PSV_0_1',
         status: 'Maintenance',
         description: 'Unit 1 scheduled for service',
-        location: 'Zone C',
         lastUpdated: '2025-10-23',
         operator: 'Charlie',
         temperature: '70',
+        type: 'Embedded',
+        capable: 'Capable',
+        PCIeGen: 'Gen 5',
+        location: 'Front'
       },
       {
         enclosure: 'BP_TNK_2',
         status: 'Inactive',
         description: 'Tank 2 offline',
-        location: 'Zone D',
         lastUpdated: '2025-10-17',
         operator: 'Diana',
         temperature: '65',
+        type: 'Integrated',
+        capable: 'Not Capable',
+        PCIeGen: 'Gen 6',
+        location: 'Back'
       },
       {
         enclosure: 'BP_PMP_3',
         status: 'Active',
         description: 'Pump 3 running at full capacity',
-        location: 'Zone A',
         lastUpdated: '2025-10-24',
         operator: 'Alice',
         temperature: '80',
+        type: 'Embedded',
+        capable: 'Capable',
+        PCIeGen: 'Gen 3',
+        location: 'Front'
       },
       {
         enclosure: 'BP_VALVE_4',
         status: 'Active',
         description: 'Valve 4 reactivated',
-        location: 'Zone B',
         lastUpdated: '2025-10-16',
         operator: 'Bob',
         temperature: '72',
-      },
+        type: 'Integrated',
+        capable: 'Not Capable',
+        PCIeGen: 'Gen 4',
+        location: 'Back'
+      }
     ]);
   }
 
@@ -200,12 +254,12 @@ export class AppComponent implements OnInit {
     const preferred: Column[] = [];
     const remaining: Column[] = [];
 
-    this.preferredKeys.forEach((key) => {
-      const match = cols.find((c) => c.map === key);
+    this.preferredKeys.forEach(key => {
+      const match = cols.find(c => c.map === key);
       if (match) preferred.push(match);
     });
 
-    remaining.push(...cols.filter((c) => !this.preferredKeys.includes(c.map)));
+    remaining.push(...cols.filter(c => !this.preferredKeys.includes(c.map)));
 
     return [...preferred, ...remaining];
   }
@@ -218,7 +272,7 @@ export class AppComponent implements OnInit {
     //basic search
     const search = this.basicSearch().trim().toLowerCase();
     if (search) {
-      return this.data().filter((row) => Object.values(row).some((v) => v?.toString().toLowerCase().includes(search)));
+      return this.data().filter(row => Object.values(row).some(v => v?.toString().toLowerCase().includes(search)));
     }
 
     //For advanced search
@@ -230,9 +284,9 @@ export class AppComponent implements OnInit {
       return map;
     }, {} as Record<string, string[]>);
 
-    return this.data().filter((row) =>
+    return this.data().filter(row =>
       Object.entries(grouped).every(([key, values]) => {
-        const col = this.columns.find((c) => c.map === key);
+        const col = this.columns.find(c => c.map === key);
         const cellValue = (row as any)[key]?.toString().toLowerCase();
         if (!cellValue) return false;
 
@@ -241,7 +295,7 @@ export class AppComponent implements OnInit {
           return values.includes(cellValue);
         } else {
           // Match if any of the values is included
-          return values.some((v) => cellValue.includes(v));
+          return values.some(v => cellValue.includes(v));
         }
       })
     );
@@ -250,8 +304,8 @@ export class AppComponent implements OnInit {
   // Clean: Show the values dynamically base on the column selection with respect to available entries in the table. Not using this now
   getColumnValues(colKey: string, searchTerm: string) {
     return this.data()
-      .map((row) => row[colKey as keyof typeof row])
+      .map(row => row[colKey as keyof typeof row])
       .filter((v, i, arr) => v && arr.indexOf(v) === i)
-      .filter((v) => v.toLowerCase().includes(searchTerm.toLowerCase()));
+      .filter(v => v.toLowerCase().includes(searchTerm.toLowerCase()));
   }
 }

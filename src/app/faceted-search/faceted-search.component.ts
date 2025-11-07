@@ -11,6 +11,7 @@ import {
   ElementRef,
   ViewChild,
   effect,
+  TemplateRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -49,12 +50,14 @@ interface GroupedFilter {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './faceted-search.component.html',
-  styleUrls: ['./faceted-search.component.css'],
+  styleUrls: ['./faceted-search.component.css']
 })
 export class FacetFilterComponent implements OnInit, OnDestroy {
   @ViewChild('searchInput', { read: ElementRef }) searchInputRef?: ElementRef<HTMLInputElement>;
   @ViewChild('valueInput', { read: ElementRef }) valueInputRef?: ElementRef<HTMLInputElement>;
   @ViewChild('chipsMiddle', { static: false }) chipsMiddleRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('searchContainer', { read: TemplateRef }) searchContainer!: TemplateRef<any>;
+  @ViewChild('pillsContainer', { read: TemplateRef }) pillsContainer!: TemplateRef<any>;
 
   preSelectedFilters = input<ActiveFilter[] | null>(null);
   @Input() chipsContainerWidth: string = '80%';
@@ -67,6 +70,10 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   //Advanced search change event emit
   @Output() filtersChange = new EventEmitter<ActiveFilter[]>();
+
+  // Emit the Search and Chips templates to the caller to use the right templates
+  @Output() searchTemplate = new EventEmitter<TemplateRef<any>>();
+  @Output() pillsTemplate = new EventEmitter<TemplateRef<any>>();
 
   //Not used now
   initialized = signal(false);
@@ -110,7 +117,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
         map.set(f.map, { map: f.map, label: f.label, values: [] });
       }
       const group = map.get(f.map)!;
-      group.values.push(...f.values.map((v) => v.value));
+      group.values.push(...f.values.map(v => v.value));
     }
 
     return Array.from(map.values());
@@ -121,7 +128,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     const map = new Map<string, Set<string>>();
     for (const f of this.activeFilters()) {
       if (!map.has(f.map)) map.set(f.map, new Set());
-      f.values.forEach((v) => map.get(f.map)!.add(v.value));
+      f.values.forEach(v => map.get(f.map)!.add(v.value));
     }
     return map;
   });
@@ -131,23 +138,23 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     // use cached full list if available, else use latest input columns
     const all = this.columns?.() ?? [];
     const filters = this.activeFilters();
-    const activeKeys = filters.map((f) => f.map);
+    const activeKeys = filters.map(f => f.map);
 
     // build mutually excluded keys
     const mutuallyExcluded = new Set<string>();
     for (const f of filters) {
-      const col = all.find((c) => c.map === f.map);
-      col?.mutuallyExclusive?.forEach((k) => mutuallyExcluded.add(k));
+      const col = all.find(c => c.map === f.map);
+      col?.mutuallyExclusive?.forEach(k => mutuallyExcluded.add(k));
     }
 
     // filter while preserving original order
     const filtered = all.filter(
-      (c) => !activeKeys.includes(c.map) && !mutuallyExcluded.has(c.map) && c.label.toLowerCase().includes(q)
+      c => !activeKeys.includes(c.map) && !mutuallyExcluded.has(c.map) && c.label.toLowerCase().includes(q)
     );
 
     // preferred first but keep their relative order
-    const preferred = filtered.filter((c) => c.preferred);
-    const others = filtered.filter((c) => !c.preferred);
+    const preferred = filtered.filter(c => c.preferred);
+    const others = filtered.filter(c => !c.preferred);
     return [...preferred, ...others];
   });
 
@@ -173,7 +180,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     // fallback to static values for select columns
     if (col.type === 'select' && col.options && col.options.length > 0) {
       const q = this.inputValue().toLowerCase();
-      return col.options.filter((v) => v.value.toLowerCase().includes(q));
+      return col.options.filter(v => v.value.toLowerCase().includes(q));
     }
 
     if (col.type === 'select' && this.dynamicValuesProvider) {
@@ -186,7 +193,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
         // Case 1: Array of strings
         if (typeof first === 'string') {
-          normalized = result.map((v) => ({ key: v, value: v }));
+          normalized = result.map(v => ({ key: v, value: v }));
         }
 
         // Case 2: Array of objects { key, value }. Currently this is not supported from the dynamicValuesProvider
@@ -238,7 +245,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
       this.tempSelectedValues.set(temp);
     }
 
-    setTimeout(() => {
+    Promise.resolve().then(() => {
       this.valueInputRef?.nativeElement.focus();
     });
   }
@@ -259,12 +266,12 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
-        this.highlightedIndex.update((i) => (i < lastIndex ? i + 1 : 0));
+        this.highlightedIndex.update(i => (i < lastIndex ? i + 1 : 0));
         break;
 
       case 'ArrowUp':
         event.preventDefault();
-        this.highlightedIndex.update((i) => (i > 0 ? i - 1 : lastIndex));
+        this.highlightedIndex.update(i => (i > 0 ? i - 1 : lastIndex));
         break;
 
       case 'Enter':
@@ -280,17 +287,17 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     const col = this.selectedColumn();
     if (!col) return;
 
-    this.activeFilters.update((filters) => {
+    this.activeFilters.update(filters => {
       const existing = [...filters];
-      const others = existing.filter((f) => f.map !== col.map);
+      const others = existing.filter(f => f.map !== col.map);
 
       return [
         ...others,
         {
           map: col.map,
           label: col.label,
-          values: [{ key: val.key, value: val.value }],
-        },
+          values: [{ key: val.key, value: val.value }]
+        }
       ] as ActiveFilter[];
     });
 
@@ -351,12 +358,12 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
-        this.highlightedIndex.update((i) => (i < lastIndex ? i + 1 : 0));
+        this.highlightedIndex.update(i => (i < lastIndex ? i + 1 : 0));
         break;
 
       case 'ArrowUp':
         event.preventDefault();
-        this.highlightedIndex.update((i) => (i > 0 ? i - 1 : lastIndex));
+        this.highlightedIndex.update(i => (i > 0 ? i - 1 : lastIndex));
         break;
 
       case 'Enter': {
@@ -383,16 +390,16 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     const selectedValues = temp.get(col.map) ?? new Set<string>();
 
     // find corresponding ColumnValue objects for selectedValues
-    const matchedValues = col.options?.filter((v) => selectedValues.has(v.value)) ?? [];
+    const matchedValues = col.options?.filter(v => selectedValues.has(v.value)) ?? [];
 
     const newFilters: ActiveFilter[] = this.activeFilters()
-      .filter((f) => f.map !== col.map)
+      .filter(f => f.map !== col.map)
       .concat([
         {
           map: col.map,
           label: col.label,
-          values: matchedValues.map((v) => ({ key: v.key, value: v.value })),
-        },
+          values: matchedValues.map(v => ({ key: v.key, value: v.value }))
+        }
       ]);
 
     this.activeFilters.set(newFilters);
@@ -404,8 +411,11 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     this.tempSelectedValues.set(new Map());
     this.resetInput(true);
 
-    // Refocus the main search input
-    // setTimeout(() => this.searchInputRef?.nativeElement.focus());
+    // ensure dropdown closes cleanly
+    Promise.resolve().then(() => {
+      this.showDropdown.set(false);
+      this.moreDropdownOpen.set(false);
+    });
   }
 
   /** User clicks "Close" in multi-select mode (cancel) */
@@ -415,8 +425,8 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   }
 
   removeChip(key: string) {
-    this.activeFilters.update((filters) => {
-      const updated = filters.filter((f) => f.map !== key);
+    this.activeFilters.update(filters => {
+      const updated = filters.filter(f => f.map !== key);
 
       // Emit updated filters to parent
       this.filtersChange.emit(updated);
@@ -444,7 +454,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   }
 
   toggleMoreDropdown() {
-    this.moreDropdownOpen.update((v) => !v);
+    this.moreDropdownOpen.update(v => !v);
   }
 
   highlightMatch(text: string): string {
@@ -502,7 +512,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    document.addEventListener('click', this.onDocumentClick, true);
+    document.addEventListener('mousedown', this.onDocumentMouseDown, true);
 
     if (this.isAdvancedModeInput()) {
       const initial = this.preSelectedFilters();
@@ -516,6 +526,9 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   }
 
   ngAfterViewInit() {
+    this.searchTemplate.emit(this.searchContainer);
+    this.pillsTemplate.emit(this.pillsContainer);
+
     if (this.activeFilters().length) {
       this.filtersChange.emit(this.activeFilters());
     }
@@ -531,8 +544,25 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    document.removeEventListener('click', this.onDocumentClick, true);
+    document.removeEventListener('mousedown', this.onDocumentMouseDown, true);
   }
+
+  private readonly onDocumentMouseDown = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+
+    // 1) If click is inside the component host → do nothing
+    if (this.elRef.nativeElement.contains(target)) return;
+
+    // 2) If click is inside any dropdown UI → do nothing
+    if (target.closest('.dropdown') || target.closest('.value-dropdown')) return;
+
+    // 3) If click is inside caller-projected UI → do nothing
+    if (target.closest('.facet-projected')) return;
+
+    // Otherwise → close dropdowns
+    this.showDropdown.set(false);
+    this.moreDropdownOpen.set(false);
+  };
 
   private calculateVisibleChips() {
     const container = this.chipsMiddleRef?.nativeElement;
@@ -571,12 +601,12 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
       const chipWidth = chip.offsetWidth + 8; // margin/gap
 
       // Limiting max width to 150px for every chips
-      if (chipWidth < 150) {
+      if (chipWidth < 225) {
         total += chipWidth;
       } else {
-        total = total + 150;
+        total = total + 225;
       }
-      if (total < availableWidth - 60) {
+      if (total < availableWidth - 95) {
         // reserve ~60px for "+ More"
         visible.unshift(group);
       } else {
@@ -591,7 +621,7 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
 
   // Toggle logic for basic and advanced search switches
   toggleMode() {
-    this.isAdvancedMode.update((v) => !v);
+    this.isAdvancedMode.update(v => !v);
     this.resetInput();
 
     if (!this.isAdvancedMode()) {
