@@ -114,18 +114,11 @@
 
 <!-- Chips container moved OUTSIDE facet-container -->
 <ng-template #pillsContainer>
-  <div
-    class="chips-bar"
-    *ngIf="isAdvancedMode() && hasFilters()"
-    [ngStyle]="{
-      width: chipsContainerWidth,
-      marginLeft: 'auto'
-    }"
-  >
+  <div class="chips-bar" *ngIf="isAdvancedMode() && hasFilters()">
     <div class="chips-container">
       <!-- Left: Clear All -->
       <div class="chips-side left" [class.hidden]="!hasFilters()">
-        <a href="#" (click)="clearAll()">Clear All</a>
+        <a (click)="clearAll()">Clear All</a>
       </div>
 
       <!-- Middle: dynamic chip list -->

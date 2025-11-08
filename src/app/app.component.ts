@@ -12,6 +12,7 @@ import { FacetFilterComponent, Column, ActiveFilter } from './faceted-search/fac
 export class AppComponent implements OnInit {
   searchTpl!: TemplateRef<any>;
   pillsTpl!: TemplateRef<any>;
+
   columns: Column[] = [];
 
   basicSearch = signal('');
@@ -20,7 +21,7 @@ export class AppComponent implements OnInit {
   //Show the preselected filters with chips and filtered table
   preSelectedFilters = [
     { map: 'status', label: 'Status', values: [{ key: 'active', value: 'Active' }] },
-    { map: 'location', label: 'Location', values: [{ key: 'zone-a', value: 'Zone A' }] }
+    { map: 'location', label: 'Location', values: [{ key: 'front', value: 'Front' }] }
   ];
 
   data = signal<any[]>([]);

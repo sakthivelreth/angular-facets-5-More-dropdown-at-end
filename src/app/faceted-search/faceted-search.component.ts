@@ -60,7 +60,6 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
   @ViewChild('pillsContainer', { read: TemplateRef }) pillsContainer!: TemplateRef<any>;
 
   preSelectedFilters = input<ActiveFilter[] | null>(null);
-  @Input() chipsContainerWidth: string = '80%';
 
   columns = input.required<Column[]>(); // Signal<Column[]>;
   @Input() dynamicValuesProvider?: (colKey: string, searchTerm: string) => string[] | Promise<string[]>;
@@ -467,19 +466,6 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
       idx + query.length
     )}</span>${text.substring(idx + query.length)}`;
   }
-
-  private readonly onDocumentClick = (event: MouseEvent) => {
-    const target = event.target as Node;
-    const clickedInsideFacet = this.elRef.nativeElement.querySelector('.facet-container')?.contains(target);
-
-    // If clicked inside search or dropdown or more dropdown → keep open
-    if (clickedInsideFacet) return;
-
-    // If clicked anywhere else outside → close
-    this.showDropdown.set(false);
-  };
-
-  // Emit whenever filters change
   constructor(private elRef: ElementRef<HTMLElement>) {
     //Todo: Use this, if the preselected filters are not emitted to the parent in the ngOnInit. Not used now
     /* effect(() => {
@@ -580,7 +566,9 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
     this.hiddenGroups.set([]);
 
     // Measure total width
-    const availableWidth = container.clientWidth;
+    const availableWidth = container.clientWidth; //Middle chips container width
+    const chipMaxWidth = 225; // Limiting max width to 225px for every chips
+    const moreOptionWidth = 95; // reserve ~95px for "+ More Filters"
     let total = 0;
     const visible: GroupedFilter[] = [];
     const hidden: GroupedFilter[] = [];
@@ -601,13 +589,13 @@ export class FacetFilterComponent implements OnInit, OnDestroy {
       const chipWidth = chip.offsetWidth + 8; // margin/gap
 
       // Limiting max width to 150px for every chips
-      if (chipWidth < 225) {
+      if (chipWidth < chipMaxWidth) {
         total += chipWidth;
       } else {
-        total = total + 225;
+        total = total + chipMaxWidth;
       }
-      if (total < availableWidth - 95) {
-        // reserve ~60px for "+ More"
+
+      if (total < availableWidth - moreOptionWidth) {
         visible.unshift(group);
       } else {
         hidden.unshift(group);
